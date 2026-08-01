@@ -12,6 +12,23 @@ Cursor를 보드게임 제작 스튜디오로 쓰기 위한 저장소입니다. 
 스튜디오 자체는 여러 게임에 재사용합니다. 그래서 규격을 코드에 박지 않고, 판단이 다른 일은
 에이전트를 나눕니다.
 
+## 산출물 언어
+
+**생성하는 설계 문서의 언어는 `studio.config.json` 의 `language` 를 따릅니다.** 기본은
+`ko` 입니다. `concept.md`, `research.md`, `ruleset.md`, 검토 리포트, 플레이테스트 기록,
+아트 바이블이 전부 여기 해당합니다.
+
+```bash
+node tools/config.mjs     # 지금 설정 확인
+```
+
+이 저장소 자체의 문서(`README.md`, `CONTRIBUTING.md`, 스킬과 에이전트 프롬프트)는 별개입니다.
+그건 항상 한국어가 기본이고, 공개 저장소라 영어 버전을 본문 아래에 함께 둡니다. 설정을 바꿔도
+이쪽은 바뀌지 않습니다.
+
+`language` 가 `ko` 가 아니면 사용자와의 대화도 그 언어로 합니다. 컴포넌트 ID, 파일명, 슬러그
+같은 식별자는 언어와 무관하게 영문 소문자 하이픈을 유지합니다.
+
 ## 협업 프로토콜
 
 **에이전트는 사용자 결정을 대신하지 않습니다.** 이게 이 저장소에서 가장 중요한 규칙입니다.
@@ -105,6 +122,7 @@ pnp/                        출력 PDF
 **의존성을 늘리지 않습니다.**
 
 ```
+tools/config.mjs    산출물 언어와 인쇄 기본값 확인
 tools/bgg/cli.mjs   seed / hydrate / search / similar / mechanics
 tools/spec.mjs      validate / resolve / sheet   (CLI 겸 라이브러리)
 tools/balance.mjs   컴포넌트 CSV 수치 분석

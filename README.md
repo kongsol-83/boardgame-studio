@@ -1,22 +1,193 @@
-# Boardgame Studio
+# 보드게임 스튜디오
+
+Cursor를 보드게임 제작 스튜디오로 만드는 프로젝트입니다. 아이디어 한 줄을 던지면 BGG에서
+유사작을 찾고, 메커니즘을 제안하고, 룰셋을 쓰고, 컴포넌트 규격을 잡고, 자동 플레이로 검증하고,
+A4 프린트 앤 플레이 PDF까지 뽑는 것을 목표로 합니다.
+
+> *Documentation is Korean-first. [English version below](#boardgame-studio-english).*
+
+## 무엇을 위한 물건인가
+
+보드게임 제작은 하나의 작업이 아닙니다. 레퍼런스 조사, 시스템 설계, 룰 작성, 컴포넌트 사양,
+밸런스 검토, 아트 디렉션이 전부 다른 종류의 판단을 요구합니다. 이 저장소는 Cursor 세션에
+그 구조를 입힙니다. 파이프라인을 도는 스킬들과, 각 판단을 하나씩 맡는 서브에이전트들입니다.
+
+목표 산출물은 **공모전 제출 수준의 프로토타입**입니다. 남이 읽고 이해되는 룰북, A4에 뽑아서
+가위로 자를 수 있는 컴포넌트, 그리고 플레이테스터를 한 테이블 모아놓고 명백한 결함으로
+그 자리를 날리지 않을 정도의 검증입니다.
+
+디지털 보드게임 엔진이 아니고, 그걸 목표로 하지도 않습니다.
+
+## 파이프라인
+
+```
+/bgs-concept      아이디어 한 줄  ->  핵심 동사, 인원, 플레이타임, 무게
+/bgs-reference    BGG 유사작 조사와 메커니즘 후보 제안
+/bgs-ruleset      룰북 형태로 쓰는 룰셋. 모든 수치는 표 하나에
+/bgs-review       크리틱 3명 병렬 검토 — 메커니즘, 밸런스, 룰
+/bgs-components   mm 단위 컴포넌트 규격과 종류별 CSV 데이터
+/bgs-sim          규칙 엔진 구현과 LLM 자동 플레이로 명백한 사고 거르기
+/bgs-art          아트 바이블, 스타일 앵커, 배치 일러스트 생성
+/bgs-pnp          재단선 포함 A4 프린트 앤 플레이 PDF
+```
+
+한 번에 끝나지 않는 걸 전제로 합니다. 검토 결과는 룰셋으로 돌아가고, 시뮬레이션 결과는 검토로
+돌아갑니다. 룰셋에는 버전을 붙여서 어느 변경이 효과가 있었는지 추적할 수 있게 합니다.
+
+## 설계에서 정한 것들
+
+만들면서 내린 판단 중 나중에 헷갈릴 만한 것들을 적어둡니다.
+
+**규격은 코드에 박지 않습니다.** 게임마다 카드 크기가 다르고, 한 게임 안에서도 카드와 타일과
+토큰과 보드가 전부 다릅니다. `spec.json` 에 mm로 선언하면 픽셀 크기는 자동으로 산출됩니다.
+20x20mm 토큰처럼 작은 건 이미지 모델의 최소 해상도를 넘기려고 키운 뒤 인쇄 시점에 줄이고,
+420x297mm 보드처럼 큰 건 줄이면서 **유효 DPI를 보고**합니다. 보드가 203dpi가 한계라는 걸
+모르고 잔글씨를 넣으면 인쇄하고 나서 알게 됩니다.
+
+**출력은 A4 고정, 여백 10mm입니다.** 여백을 워드 기본값인 12.7mm로 두면 포커 카드가 장당
+9장에서 8장으로 줄고 가로로 눕혀야 들어갑니다. 10mm가 거의 모든 가정용 프린터의 인쇄 가능
+영역 안이면서 3x3을 지키는 지점입니다.
+
+**시뮬레이션의 목적은 밸런싱이 아닙니다.** 보드게임 밸런스는 소수점을 다투는 영역이 아니고,
+그 정밀도는 시뮬로 얻을 것도 아닙니다. 시뮬은 **테이블에 들고 가기 전에 명백한 사고를 거르는
+필터**입니다. 게임이 끝나기는 하는가, 시간이 맞는가, 3라운드 만에 필승법이 드러나지는 않는가.
+기본 30판이면 충분하고, 그 이상은 오버피팅입니다.
+
+**플레이어는 LLM입니다.** 보드게임은 턴제라 실시간 제약이 없고, 게임마다 휴리스틱 봇을 짜는 건
+진짜 비용인 데다 나쁜 봇은 잘못된 결론을 줍니다. 게다가 LLM은 학습 데이터에 없는 새 게임을
+룰북만 보고 플레이하므로 **"룰북만 읽고 이해되는가"가 자동으로 테스트됩니다.** 30판 승률보다
+이쪽이 값집니다. 랜덤 봇은 남겨두지만 밸런스용이 아니라 엔진이 교착에 빠지지 않는지 보는
+스모크 테스트용입니다.
+
+**에이전트는 사용자 결정을 대신하지 않습니다.** 게임 디자인은 취향이 개입하는 영역입니다.
+"이 메커니즘이 낫다"의 상당 부분은 만드는 사람이 무엇을 재미있다고 느끼는지에 달려 있고,
+그건 에이전트가 알 수 없습니다. 모든 에이전트는 먼저 묻고, 선택지를 장단점과 함께 제시하고,
+사용자가 고른 뒤에 움직입니다.
+
+## 준비물
+
+- **Node.js 24 이상** — `node:sqlite`, `fetch`, `node:test` 를 내장으로 쓰기 때문에 네이티브
+  빌드가 없습니다. 런타임 의존성은 두 개뿐입니다.
+- **Cursor** — 스킬과 서브에이전트가 `.cursor/` 아래에 있습니다.
+- **BGG 액세스 토큰** *(선택)* — 레퍼런스 조사에만 필요합니다.
+  [boardgamegeek.com/applications](https://boardgamegeek.com/applications) 에서 발급받습니다.
+- **OpenAI API 키** *(선택)* — 플레이 시뮬레이션과 아트 생성에만 필요합니다.
+
+## 시작하기
+
+```bash
+git clone https://github.com/kongsol-83/boardgame-studio.git
+cd boardgame-studio
+npm install
+cp .env.example .env      # 가지고 있는 키만 채우면 됩니다
+```
+
+Cursor에서 폴더를 열고 `/bgs` 를 입력하면 사용 가능한 스킬이 뜹니다.
+
+### 산출물 언어 바꾸기
+
+이 저장소는 한국어로 만들어졌지만 쓰는 분의 나라는 다를 수 있습니다. 생성되는 설계 문서
+(컨셉, 룰셋, 검토 리포트 등)의 언어는 `studio.config.json` 에서 정합니다.
+
+```json
+{ "language": "ko" }
+```
+
+`ko`, `en`, `ja`, `zh-CN`, `de`, `fr`, `es` 를 압니다. 다른 값을 써도 막지 않고 경고만
+합니다. 한 번만 바꿔보려면 환경변수 `BGS_LANGUAGE` 가 파일보다 우선합니다.
+
+```bash
+node tools/config.mjs      # 지금 설정 확인
+```
+
+### 키 없이 되는 것
+
+파이프라인의 상당 부분은 오프라인으로 돌아갑니다. 클론하고 `npm install` 만 하면 예제
+프로젝트로 아래가 바로 동작합니다.
+
+- 컴포넌트 규격 검증과 mm에서 픽셀 산출
+- A4 프린트 앤 플레이 PDF 렌더
+- 랜덤 봇 규칙 엔진 스모크 테스트
+- 컴포넌트 CSV 수치 분석
+
+키가 필요한 건 셋뿐입니다. BGG 조사(BGG 토큰), LLM 플레이테스트와 아트 생성(OpenAI 키).
+
+### BGG 인덱스 구축
+
+레퍼런스 조사를 쓰려면 로컬 인덱스가 필요합니다. 두 경로가 있습니다.
+
+빠른 길은 브라우저로 [BGG 랭킹 덤프](https://boardgamegeek.com/data_dumps/bg_ranks)를 받아
+`data/ranks/` 에 그대로 넣는 것입니다. 파일명의 날짜가 곧 버전이라 이름은 건드리지 않습니다.
+
+```bash
+node tools/bgg/cli.mjs seed          # data/ranks/ 에서 최신 덤프 자동 선택
+node tools/bgg/cli.mjs hydrate       # 상위 20000개 상세 조회, 약 17분
+```
+
+덤프를 받기 귀찮으면 `seed --crawl` 로 갑니다. 로그인이 전혀 필요 없는 대신 첫 수집이
+6시간 걸립니다. `--resume` 이 있으니 백그라운드로 돌려두면 됩니다.
+
+덤프가 90일보다 오래되면 조사할 때 알림이 뜨고 다운로드 페이지가 열립니다.
+
+## 저장소 구조
+
+```
+.cursor/agents/     서브에이전트 — 조사, 크리틱, 규격, 시뮬레이션, 아트
+.cursor/skills/     /bgs-* 워크플로우 스킬
+tools/              Node CLI — bgg, spec, balance, sim, art, pnp
+presets/            표준 컴포넌트 규격 모음
+projects/           작업 중인 게임들. example-* 외에는 gitignore
+data/               로컬 BGG 인덱스와 랭킹 덤프. gitignore
+```
+
+## 커밋하면 안 되는 것
+
+되돌릴 수 없는 두 가지입니다. CI가 막지만 알고는 계셔야 합니다.
+
+**본인 게임 프로젝트.** 공모전 출품작이 공개 저장소에 올라가면 출품 자격까지 걸릴 수 있습니다.
+`projects/` 는 통째로 gitignore이고 `projects/example-*/` 만 추적됩니다.
+
+**BGG 데이터.** XML API 이용약관상 받아온 데이터를 재배포할 수 없습니다. `data/` 도 통째로
+제외되며, 토큰은 각자 발급받아 씁니다.
+
+## 상태
+
+초기 개발 중입니다. 무엇이 들어왔는지는 [CHANGELOG.md](CHANGELOG.md) 를 보세요.
+
+## 기여
+
+환영합니다. 이 프로젝트는 코드보다 프롬프트와 지식 기여가 더 중요할 수 있습니다.
+[CONTRIBUTING.md](CONTRIBUTING.md) 를 봐주세요.
+
+## 라이선스
+
+[Apache-2.0](LICENSE). 저작자 표기와 BGG 데이터 조건은 [NOTICE](NOTICE) 에 있습니다.
+
+보드게임 데이터는 [BoardGameGeek](https://boardgamegeek.com) 의 BGG XML API2에서 가져옵니다.
+BGG 데이터를 이 저장소에 담아 배포하지 않으며, 사용자가 자기 토큰을 발급받아 씁니다.
+
+---
+
+# Boardgame Studio (English)
 
 An AI board game design studio for [Cursor](https://cursor.com). Turn a one-line idea into
 BGG reference research, mechanism proposals, a ruleset, LLM playtest simulation, and
 print-and-play PDFs.
 
-> **한국어 사용자에게** — 본문은 [README.ko.md](README.ko.md) 에 있습니다. 스킬과 에이전트
-> 프롬프트, 그리고 생성되는 모든 설계 문서는 한국어입니다.
+> This project is Korean-first. Skills, subagent prompts, and generated design documents
+> are written in Korean by default. You can change the language of generated documents —
+> see [Choosing the output language](#choosing-the-output-language) below.
 
 ## What it is
 
 Board game design is not a single task. It is research, systems design, rules writing,
 component specification, balance checking, and art direction — each needing a different
-kind of judgement. This repository gives a Cursor session that structure: a set of
-skills that run the pipeline, and subagents that each own one of those judgements.
+kind of judgement. This repository gives a Cursor session that structure: a set of skills
+that run the pipeline, and subagents that each own one of those judgements.
 
 The target output is a **contest-submission prototype**: a ruleset someone else can read,
-components you can print on A4 and cut with scissors, and enough verification that you
-do not waste a table full of playtesters on an obvious defect.
+components you can print on A4 and cut with scissors, and enough verification that you do
+not waste a table full of playtesters on an obvious defect.
 
 It is not a digital board game engine, and it is not trying to be one.
 
@@ -35,6 +206,37 @@ It is not a digital board game engine, and it is not trying to be one.
 
 Rounds are expected. Review feeds back into the ruleset, simulation feeds back into
 review, and the ruleset carries a version number so you can tell which change helped.
+
+## Decisions worth knowing
+
+**Component sizes are never hardcoded.** Every game uses different card sizes, and a single
+game mixes cards, tiles, tokens, and boards. You declare sizes in millimetres in
+`spec.json` and pixel dimensions are derived. Small components like a 20x20mm token are
+scaled *up* to clear the image model's minimum resolution and scaled back down at print
+time; large ones like a 420x297mm board are scaled *down*, and the resolver **reports the
+effective DPI** so you learn that the board tops out at 203dpi before you print fine text
+on it, not after.
+
+**Output is always A4 with 10mm margins.** Using Word's default "narrow" 12.7mm drops
+poker cards from 9 to 8 per sheet and forces landscape rotation. 10mm keeps the 3x3 layout
+while staying inside almost every home printer's printable area.
+
+**Simulation is not for balancing.** Board game balance is not a decimal-point discipline,
+and that precision is not something a simulation can give you anyway. Simulation is a
+filter that catches obvious defects *before* you bring the game to a table: does it end,
+does it fit the target playtime, is there a dominant line by round three. Thirty games is
+enough; more is overfitting.
+
+**The player is an LLM.** Board games are turn-based, so there is no realtime constraint,
+and writing a heuristic bot per game is real work — with the added risk that a bad bot
+produces confident but wrong conclusions. An LLM also plays a brand-new game by reading
+the rulebook, which means **"is the rulebook understandable?" gets tested for free.** That
+is worth more than a win-rate table from thirty games. A random bot is kept, but as an
+engine smoke test for deadlocks, not for balance.
+
+**Agents do not decide for you.** Game design involves taste. Much of "this mechanism is
+better" depends on what *you* find fun, and an agent cannot know that. Every agent asks
+first, presents options with trade-offs, and waits for you to choose.
 
 ## Requirements
 
@@ -57,7 +259,27 @@ cp .env.example .env      # then fill in the keys you have
 
 Open the folder in Cursor and type `/bgs` to see the available skills.
 
-### Without any API key
+### Choosing the output language
+
+This repository was built in Korean, but you may not be. The language of generated design
+documents (concept, ruleset, review reports, and so on) is set in `studio.config.json`.
+
+```json
+{ "language": "en" }
+```
+
+Known values are `ko`, `en`, `ja`, `zh-CN`, `de`, `fr`, `es`. Anything else is accepted
+with a warning rather than rejected. For a one-off run, the `BGS_LANGUAGE` environment
+variable takes precedence over the file.
+
+```bash
+node tools/config.mjs      # show the resolved config
+```
+
+Note that this changes what the agents *write*, not the repository's own documentation —
+`README.md`, `CONTRIBUTING.md`, and the skill prompts stay Korean-first.
+
+### What works without any API key
 
 Most of the pipeline runs offline. Clone, `npm install`, and these work immediately
 against the bundled example project:
@@ -70,6 +292,24 @@ against the bundled example project:
 Only three things need a key: BGG research (BGG token), LLM playtesting, and art
 generation (OpenAI key).
 
+### Building the BGG index
+
+Reference research needs a local index. There are two paths.
+
+The fast one is to download the [BGG ranking dump](https://boardgamegeek.com/data_dumps/bg_ranks)
+in a browser and drop it into `data/ranks/` unchanged — the date in the filename is the
+version, so do not rename it.
+
+```bash
+node tools/bgg/cli.mjs seed          # picks the newest dump in data/ranks/
+node tools/bgg/cli.mjs hydrate       # fetches details for the top 20000, ~17 minutes
+```
+
+If you would rather not deal with the download, `seed --crawl` needs no login at all, but
+the first pass takes about six hours. It supports `--resume`, so run it in the background.
+
+Once the dump is older than 90 days, research commands warn you and open the download page.
+
 ## Repository layout
 
 ```
@@ -81,22 +321,30 @@ projects/           your games. gitignored except example-*
 data/               local BGG index and ranking dumps. gitignored
 ```
 
+## What must never be committed
+
+Two things you cannot undo. CI blocks both, but it is worth knowing why.
+
+**Your own game projects.** Publishing a contest entry can disqualify it. `projects/` is
+gitignored entirely; only `projects/example-*/` is tracked.
+
+**BoardGameGeek data.** The XML API Terms of Use do not allow redistributing fetched data.
+`data/` is excluded entirely, and every user brings their own token.
+
 ## Status
 
 Early development. See [CHANGELOG.md](CHANGELOG.md) for what has landed.
 
 ## Contributing
 
-Contributions are welcome, and prompt and knowledge contributions matter here as much
-as code. See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-Two rules worth knowing before you open a PR: never commit BoardGameGeek data, and never
-commit a game project other than `projects/example-*`. CI enforces both.
+Contributions are welcome, and prompt and knowledge contributions matter here as much as
+code. See [CONTRIBUTING.md](CONTRIBUTING.md). Issues and pull requests in English are
+fine.
 
 ## License
 
-[Apache-2.0](LICENSE). See [NOTICE](NOTICE) for attribution and the BoardGameGeek
-data terms.
+[Apache-2.0](LICENSE). See [NOTICE](NOTICE) for attribution and the BoardGameGeek data
+terms.
 
 Board game data comes from [BoardGameGeek](https://boardgamegeek.com) via the BGG XML
 API2. No BGG data is redistributed here; you bring your own token.

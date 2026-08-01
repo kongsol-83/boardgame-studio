@@ -1,10 +1,6 @@
 # 기여 가이드
 
-> **English summary** — Contributions are welcome. Prompt and knowledge contributions matter
-> here as much as code. Working documents and agent prompts are written in Korean; the
-> English `README.md` is the entry point. Before opening a PR, run `npm test`, and never
-> commit BoardGameGeek data or a game project other than `projects/example-*`.
-> CI enforces both.
+*[English version below](#contributing-english).*
 
 먼저 [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) 를 읽어주세요.
 
@@ -26,6 +22,18 @@
 BGG XML API 이용약관은 제3자 서비스가 다른 애플리케이션에 데이터를 중계하는 것을 금지합니다.
 이 도구를 웹 서비스로 만들어 배포하면 여기에 걸립니다. **로컬에서 각자 자기 토큰으로 돌리는
 도구**로 남는다는 전제 위에 설계돼 있으니, 이 전제를 깨는 방향의 PR은 받기 어렵습니다.
+
+## 언어
+
+**이 저장소의 문서와 프롬프트는 한국어가 기본입니다.** `README.md` 처럼 공개 저장소의
+입구가 되는 문서는 한국어 본문 아래에 영어 버전을 함께 둡니다.
+
+생성되는 설계 문서의 언어는 다릅니다. 그건 `studio.config.json` 의 `language` 로
+사용자가 정하며, 쓰는 분의 나라가 다를 수 있으니 열어둔 것입니다. 스킬과 에이전트는
+이 값을 읽어 그 언어로 문서를 씁니다.
+
+영어 문서를 늘리는 기여는 환영하지만 **한국어 원본을 영어로 대체하는 방향은 받지 않습니다.**
+나란히 두는 방향으로 부탁드립니다. Issue와 PR은 한국어와 영어 모두 괜찮습니다.
 
 ## 기여 유형
 
@@ -60,8 +68,8 @@ BGG XML API 이용약관은 제3자 서비스가 다른 애플리케이션에 �
 
 ### 번역
 
-작업 문서와 에이전트 프롬프트는 한국어가 기본입니다. 영어 문서를 늘리는 기여는 환영하지만,
-**한국어 원본을 영어로 대체하는 방향은 받지 않습니다.** 나란히 두는 방향으로 부탁드립니다.
+산출 문서 언어를 늘리려면 `tools/lib/config.mjs` 의 `KNOWN_LANGUAGES` 에 코드를 추가하고,
+스킬 프롬프트가 그 언어로 잘 쓰는지 확인해주세요.
 
 ### 실제 사용 사례
 
@@ -78,6 +86,8 @@ BGG XML API 이용약관은 제3자 서비스가 다른 애플리케이션에 �
 - **Windows 경로를 가정하지 않습니다.** 개발은 Windows에서 하지만 `node:path` 를 쓰고
   하드코딩된 구분자를 넣지 않습니다.
 - **API 키가 필요한 코드는 CI에서 못 돕니다.** 순수 로직을 분리해서 테스트 가능하게 해주세요.
+- **파일은 UTF-8 BOM 없이 저장합니다.** BOM이 붙으면 shebang이 깨지면서 원인을 알기 어려운
+  문법 오류가 납니다. `npm run validate` 가 잡습니다.
 
 ## 개발 환경
 
@@ -93,11 +103,10 @@ Node.js 24 이상이 필요합니다. `node:sqlite` 를 쓰기 때문입니다.
 ## PR 전에 돌릴 것
 
 ```bash
-npm test        # 문법 검사 + 형식 검증 + 단위 테스트
+npm test        # 형식 검증 + 문법 검사 + 단위 테스트
 ```
 
-CI도 같은 것을 돌리고, 여기에 더해 예제 프로젝트로 규격 검증과 PDF 렌더, 엔진 스모크
-테스트를 실제로 실행합니다.
+CI도 같은 것을 ubuntu와 windows 두 러너에서 돌리고, 여기에 더해 커밋 금지 항목을 검사합니다.
 
 ## 커밋과 PR
 
@@ -106,8 +115,7 @@ CI도 같은 것을 돌리고, 여기에 더해 예제 프로젝트로 규격 �
 ```
 feat(skills): bgs-reference에 메커니즘 희소 조합 탐색 추가
 fix(pnp): A4 여백 10mm에서 재단선이 인쇄 영역을 벗어나던 문제
-docs(ko): 규격 시스템 설명 보강
-chore(deps): 없음 - 의존성은 늘리지 않습니다
+docs(readme): 산출물 언어 설정 설명 추가
 ```
 
 PR은 작고 목적이 하나인 편이 좋습니다. 스킬 프롬프트를 고쳤다면 **무엇이 달라지는지 예시를
@@ -115,4 +123,137 @@ PR은 작고 목적이 하나인 편이 좋습니다. 스킬 프롬프트를 고
 
 ## 질문
 
-Issue나 Discussion으로 편하게 열어주세요. 한국어와 영어 모두 괜찮습니다.
+Issue나 Discussion으로 편하게 열어주세요.
+
+---
+
+# Contributing (English)
+
+Please read the [Code of Conduct](CODE_OF_CONDUCT.md) first.
+
+## What must never be committed
+
+Two things you cannot undo. CI blocks both, but please be careful locally too.
+
+**BoardGameGeek data.** The XML API Terms of Use do not allow redistributing fetched data.
+`data/` is gitignored entirely — the SQLite index and the ranking dumps both live there.
+Get your own token at
+[boardgamegeek.com/applications](https://boardgamegeek.com/applications).
+**We do not create a shared project token.**
+
+**Your own game projects.** Publishing a contest entry can disqualify it. `projects/` is
+gitignored entirely and only `projects/example-*/` is tracked. Unless you are editing the
+example, do not include anything under `projects/` in a commit.
+
+## Do not wrap this in a service
+
+The BGG XML API Terms of Use prohibit third-party services from relaying data to other
+applications. Deploying this as a web service would violate that. The design assumes it
+stays **a local tool that each person runs with their own token**, so pull requests that
+break that assumption are unlikely to be accepted.
+
+## Language
+
+**Documentation and prompts in this repository are Korean-first.** Public-facing entry
+points like `README.md` carry an English version below the Korean body.
+
+Generated design documents are a separate matter. Their language is chosen by the user in
+`studio.config.json` under `language`, precisely because contributors and users may not be
+Korean. Skills and agents read that value and write in that language.
+
+Contributions that add English documentation are welcome, but **replacing the Korean
+original with English is not.** Please put them side by side. Issues and pull requests in
+either language are fine.
+
+## Kinds of contribution
+
+Code is not the only contribution — the ones below are arguably more useful.
+
+### Component size presets
+
+Adding standard sizes to `presets/components.json`. Tarot, Euro mini, bridge, square
+tiles — anything actually used. This has the lowest barrier to entry and is immediately
+useful to everyone. Please include the source (a manufacturer spec sheet, for instance).
+
+### Skill and agent prompts
+
+Editing or adding prompts under `.cursor/skills/` and `.cursor/agents/`. These land best
+when they come with a concrete example, like "this critic kept missing X".
+
+A few rules:
+
+- Names must start with the **`bgs-` prefix**. Cursor puts both skills and subagents in
+  the slash menu, so anything without a prefix collides with built-in commands.
+- A skill's `name` must **exactly match its parent folder name**. If it does not, Cursor
+  silently skips loading it and nobody can tell why. `npm run validate` checks this.
+- `description` is required and capped at 1024 characters. Say what it does *and* when to
+  use it.
+- Rule files must use the `.mdc` extension. A `.md` file in `.cursor/rules/` is ignored.
+- Do not let an agent decide for the user. Ask first, present options, let the user pick.
+
+### Korean descriptions for BGG mechanisms
+
+Improving `.cursor/skills/bgs-reference/references/bgg-mechanisms.md`. One line from
+someone who has actually played a game using that mechanism beats any generated summary.
+
+### Translation
+
+To add an output language, add the code to `KNOWN_LANGUAGES` in `tools/lib/config.mjs`
+and check that the skill prompts write well in it.
+
+### Real usage reports
+
+What you built with this, where it fell short, where the workflow got stuck. Issues and
+Discussions are the most useful place for these.
+
+### Code
+
+The CLIs under `tools/`. Please respect these constraints:
+
+- **Do not add runtime dependencies.** There are exactly two — `fast-xml-parser` and
+  `pdfkit` — and everything else uses Node 24 built-ins (`node:sqlite`, `fetch`, `zlib`,
+  `node:test`). Packages requiring a native build are not accepted. If you genuinely need
+  a new dependency, open an issue first.
+- **Do not assume Windows paths.** Development happens on Windows, but use `node:path`
+  and never hardcode separators.
+- **Code needing an API key cannot run in CI.** Separate the pure logic so it stays
+  testable.
+- **Save files without a UTF-8 BOM.** A BOM breaks the shebang and produces a syntax error
+  that is hard to trace. `npm run validate` catches it.
+
+## Development setup
+
+```bash
+git clone https://github.com/kongsol-83/boardgame-studio.git
+cd boardgame-studio
+npm install
+cp .env.example .env
+```
+
+Node.js 24 or newer is required, because of `node:sqlite`.
+
+## Before opening a pull request
+
+```bash
+npm test        # format validation + syntax check + unit tests
+```
+
+CI runs the same on both ubuntu and windows, plus the forbidden-file checks.
+
+## Commits and pull requests
+
+Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/).
+
+```
+feat(skills): add rare mechanism-pair search to bgs-reference
+fix(pnp): cut lines fell outside the printable area at 10mm A4 margins
+docs(readme): document the output language setting
+```
+
+Keep pull requests small and single-purpose. If you changed a skill prompt, **include an
+example of what changes as a result** — a prompt diff alone rarely shows whether it is an
+improvement.
+
+## Questions
+
+Open an issue or a discussion.

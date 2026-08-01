@@ -23,3 +23,12 @@
 - `/bgs-reference` — 유사작 조사와 메커니즘 후보 제안
 - `bgs-researcher` 서브에이전트 — 조회 결과를 압축해 돌려준다. 원본 JSON이 메인
   컨텍스트를 잡아먹지 않게 하는 게 목적
+- `studio.config.json` 과 `tools/config.mjs` — 생성되는 설계 문서의 언어를 정한다.
+  이 저장소는 한국어로 만들어졌지만 쓰는 사람의 나라는 다를 수 있다. 환경변수
+  `BGS_LANGUAGE` 가 파일보다 우선한다
+
+### Changed
+
+- 모든 문서를 한국어 본문 + 하단 영어 구성으로 통일. `README.ko.md` 는 `README.md` 로
+  합치고 삭제했다. 공개 저장소라 영어를 함께 두지만 기본은 한국어다
+- `CODE_OF_CONDUCT.md` 에 Contributor Covenant 2.1 공식 한국어 번역을 함께 실었다

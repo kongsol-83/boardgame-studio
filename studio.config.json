@@ -1,0 +1,11 @@
+{
+  "language": "ko",
+  "defaults": {
+    "print": {
+      "sheet": "A4",
+      "margin_mm": 10,
+      "dpi": 300,
+      "cut_gap_mm": 0
+    }
+  }
+}

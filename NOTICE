@@ -1,4 +1,37 @@
-Boardgame Studio
+보드게임 스튜디오 (Boardgame Studio)
+Copyright 2026 Sol Kong (https://github.com/kongsol-83)
+
+이 소프트웨어는 Apache License 2.0 을 따릅니다. 전문은 LICENSE 파일에 있고
+http://www.apache.org/licenses/LICENSE-2.0 에서도 볼 수 있습니다.
+
+관련 법이 요구하거나 서면으로 합의하지 않는 한, 이 라이선스로 배포되는 소프트웨어는
+명시적이든 묵시적이든 어떠한 보증도 없이 "있는 그대로" 제공됩니다.
+
+--------------------------------------------------------------------------------
+
+BoardGameGeek 데이터에 관하여
+
+이 소프트웨어는 BGG XML API2 를 통해 BoardGameGeek (https://boardgamegeek.com) 의
+데이터를 조회하며, BGG XML API 이용약관을 따릅니다.
+
+BoardGameGeek 데이터는 이 소프트웨어와 함께 배포되지 않습니다. 사용자는 조사 도구를
+쓰기 전에 https://boardgamegeek.com/applications 에서 직접 애플리케이션을 등록하고
+자신의 액세스 토큰을 발급받아야 합니다.
+
+로컬에 구축된 인덱스와 내려받은 랭킹 덤프는 `data/` 아래에 저장되며, 이 디렉토리는
+버전 관리에서 제외되어 있습니다. 커밋하거나 재배포해서는 안 됩니다.
+
+--------------------------------------------------------------------------------
+
+포함된 제3자 저작물
+
+CODE_OF_CONDUCT.md 는 Contributor Covenant 2.1 (https://www.contributor-covenant.org)
+을 사용하며, CC BY 4.0 을 따릅니다.
+
+--------------------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+Boardgame Studio (English)
 Copyright 2026 Sol Kong (https://github.com/kongsol-83)
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,12 +48,21 @@ limitations under the License.
 
 --------------------------------------------------------------------------------
 
-This software queries data from BoardGameGeek (https://boardgamegeek.com)
-through the BGG XML API2, subject to the BGG XML API Terms of Use.
+About BoardGameGeek data
 
-No BoardGameGeek data is redistributed with this software. Each user must
-register their own application and obtain their own access token at
+This software queries data from BoardGameGeek (https://boardgamegeek.com) through the
+BGG XML API2, subject to the BGG XML API Terms of Use.
+
+No BoardGameGeek data is redistributed with this software. Each user must register their
+own application and obtain their own access token at
 https://boardgamegeek.com/applications before using the research tooling.
 
-Any locally built index or downloaded ranking dump lives under `data/`, which
-is excluded from version control and must not be committed or redistributed.
+Any locally built index or downloaded ranking dump lives under `data/`, which is excluded
+from version control and must not be committed or redistributed.
+
+--------------------------------------------------------------------------------
+
+Included third-party work
+
+CODE_OF_CONDUCT.md uses the Contributor Covenant 2.1
+(https://www.contributor-covenant.org), licensed under CC BY 4.0.
