@@ -103,9 +103,11 @@ Node.js 24 이상이 필요합니다. `node:sqlite` 를 쓰기 때문입니다.
 
 ### Windows에서 작업한다면
 
-**PowerShell 7 이상을 쓰세요.** Windows에 기본 탑재된 PowerShell 5.1은 `>` 리다이렉션을
-UTF-16으로 쓰고, `Set-Content -Encoding UTF8` 이 BOM을 붙이고, 콘솔 인코딩이 UTF-8이
-아닙니다. BOM이 붙은 `.mjs` 는 shebang이 깨져서 원인을 찾기 어려운 문법 오류가 납니다.
+**PowerShell 7 이상을 쓰세요.** 기본 탑재된 5.1은 UTF-8을 제대로 다루지 못합니다.
+BOM 없는 UTF-8 스크립트를 읽지 못하고, `>` 는 UTF-16으로 쓰고, `Set-Content -Encoding UTF8`
+은 BOM을 붙입니다. BOM이 붙은 `.mjs` 는 shebang이 깨져서 원인을 찾기 어려운 문법 오류가
+납니다. 실측 비교는 [README의 해당 절](README.md#windows라면-powershell-7을-먼저-설치하세요)에
+있습니다.
 
 ```powershell
 winget install --id Microsoft.PowerShell --source winget
@@ -252,10 +254,12 @@ Node.js 24 or newer is required, because of `node:sqlite`.
 
 ### If you work on Windows
 
-**Use PowerShell 7 or newer.** The bundled Windows PowerShell 5.1 writes `>` redirection
-as UTF-16, adds a BOM with `Set-Content -Encoding UTF8`, and does not default the console
-to UTF-8. A BOM on a `.mjs` file breaks the shebang and produces a syntax error that is
-hard to trace.
+**Use PowerShell 7 or newer.** The bundled 5.1 does not handle UTF-8 properly: it fails to
+read BOM-less UTF-8 scripts, writes `>` redirection as UTF-16, and adds a BOM with
+`Set-Content -Encoding UTF8`. A BOM on a `.mjs` file breaks the shebang and produces a
+syntax error that is hard to trace. See
+[the README section](README.md#on-windows-install-powershell-7-first) for a measured
+comparison.
 
 ```powershell
 winget install --id Microsoft.PowerShell --source winget

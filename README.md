@@ -87,8 +87,35 @@ npm run doctor            # 무엇이 준비됐고 무엇이 빠졌는지 확인
 
 Cursor에서 폴더를 열고 `/bgs` 를 입력하면 사용 가능한 스킬이 뜹니다.
 
-Windows에서 쓰신다면 **PowerShell 7 이상**을 권합니다. 기본 탑재된 5.1은 인코딩 기본값
-때문에 파일이 깨지는 경우가 있습니다. `npm run doctor` 가 확인해줍니다.
+### Windows라면 PowerShell 7을 먼저 설치하세요
+
+**이건 취향 문제가 아닙니다.** Windows에 기본 탑재된 PowerShell 5.1은 UTF-8을 제대로
+다루지 못해서, 이 저장소에서 작업하면 원인을 찾기 어려운 오류를 만나게 됩니다.
+
+같은 UTF-8 스크립트를 두 셸에서 돌려본 결과입니다.
+
+```
+                        PowerShell 5.1        PowerShell 7
+콘솔 출력 인코딩        ks_c_5601-1987        utf-8
+> 리다이렉션            UTF-16LE              UTF-8
+Set-Content -Encoding UTF8   BOM 붙음         BOM 없음
+BOM 없는 UTF-8 스크립트 읽기  실패             정상
+```
+
+마지막 항목이 특히 문제입니다. 5.1은 BOM 없는 UTF-8 파일을 cp949로 읽어서 한글이 전부
+깨지고 파서가 죽습니다. 반대로 5.1이 만든 BOM 붙은 `.mjs` 는 shebang이 깨져서
+`SyntaxError: Invalid or unexpected token` 이 나는데, 파일을 봐서는 멀쩡해 보이기 때문에
+원인을 찾는 데 시간이 걸립니다.
+
+```powershell
+winget install --id Microsoft.PowerShell --source winget
+```
+
+설치 후 에디터의 터미널 기본 프로필을 `pwsh` 로 바꿉니다. `npm run doctor` 가 확인해줍니다.
+
+AI 에이전트로 작업한다면 [.cursor/rules/shell.mdc](.cursor/rules/shell.mdc) 를 함께 보세요.
+PowerShell 7으로도 안 고쳐지는 것들(인라인 스크립트 파싱, stderr가 빨간 에러로 보이는 것,
+유닉스 명령 부재)을 규칙으로 막아둡니다. 전부 실제로 시간을 날린 사례에서 나왔습니다.
 
 ### 산출물 언어 바꾸기
 
@@ -269,8 +296,38 @@ npm run doctor            # reports what is ready and what is missing
 
 Open the folder in Cursor and type `/bgs` to see the available skills.
 
-On Windows, use **PowerShell 7 or newer**. The bundled 5.1 has encoding defaults that
-corrupt files. `npm run doctor` checks for it.
+### On Windows, install PowerShell 7 first
+
+**This is not a preference.** The PowerShell 5.1 that ships with Windows does not handle
+UTF-8 properly, and working in this repository with it produces errors that are hard to
+trace back to their cause.
+
+Here is the same UTF-8 script run under both shells:
+
+```
+                              PowerShell 5.1     PowerShell 7
+console output encoding       ks_c_5601-1987     utf-8
+> redirection                 UTF-16LE           UTF-8
+Set-Content -Encoding UTF8    adds a BOM         no BOM
+reading a BOM-less UTF-8 script   fails          works
+```
+
+That last row is the worst one. 5.1 reads BOM-less UTF-8 as the local ANSI codepage, which
+mangles every non-ASCII character and kills the parser. In the other direction, a `.mjs`
+file written by 5.1 carries a BOM that breaks the shebang and yields
+`SyntaxError: Invalid or unexpected token` — and the file looks perfectly fine when you
+open it, so the cause is not obvious.
+
+```powershell
+winget install --id Microsoft.PowerShell --source winget
+```
+
+Then switch your editor's default terminal profile to `pwsh`. `npm run doctor` verifies it.
+
+If you work with an AI agent, also read [.cursor/rules/shell.mdc](.cursor/rules/shell.mdc).
+It covers the problems PowerShell 7 does *not* fix — inline script parsing, native stderr
+being rendered as a red error block, and missing Unix commands. Every rule in it came from
+an actual incident.
 
 ### Choosing the output language
 
