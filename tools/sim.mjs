@@ -237,6 +237,8 @@ async function commandRun(slug, values) {
   const perPlayers = {};
   const reviews = [];
   const confusions = [];
+  const strategyTally = new Map();
+  const focus = values.focus?.trim() || null;
 
   for (const playerCount of playerCounts) {
     const tasks = Array.from({ length: games }, (_, index) => async () => {
@@ -269,6 +271,18 @@ async function commandRun(slug, values) {
           // 소감을 못 받아도 판 자체는 유효하다
         }
       }
+      /*
+       * LLM이 스스로 붙인 전략 태그를 승패와 함께 센다. 특정 전략이 계속 이기면
+       * 지배 전략 후보다. 봇으로는 이런 신호를 못 얻는다.
+       */
+      for (const [seat, tag] of strategies) {
+        const key = String(tag).trim().slice(0, 40);
+        const entry = strategyTally.get(key) ?? { tag: key, played: 0, won: 0 };
+        entry.played += 1;
+        if (result.finished && result.winners.includes(seat)) entry.won += 1 / result.winners.length;
+        strategyTally.set(key, entry);
+      }
+
       return { ...result, strategies: Object.fromEntries(strategies) };
     });
 
@@ -300,8 +314,12 @@ async function commandRun(slug, values) {
         at: new Date().toISOString(),
         model,
         rulesetVersion: version,
+        focus,
         playerCounts,
         gamesPerPlayerCount: games,
+        strategies: [...strategyTally.values()]
+          .map((entry) => ({ ...entry, won: Number(entry.won.toFixed(1)), winRate: Number((entry.won / entry.played).toFixed(2)) }))
+          .sort((a, b) => b.played - a.played),
         byPlayers: Object.fromEntries(
           Object.entries(perPlayers).map(([key, value]) => [key, { ...value, raw: undefined }]),
         ),
@@ -346,9 +364,21 @@ function commandReport(slug) {
   lines.push('');
   lines.push(`룰셋 v${data.rulesetVersion ?? '?'} · ${data.model} · 인원별 ${data.gamesPerPlayerCount}판`);
   lines.push('');
-  lines.push('> 이 리포트는 밸런스를 결정하지 않습니다. 테이블에 들고 가기 전에 명백한 사고를');
-  lines.push('> 거르는 용도입니다. 아래 판수로는 완주율, 플레이타임, 명백한 좌석 쏠림까지만');
-  lines.push('> 말할 수 있습니다. 미세한 승률 차이로 수치를 조정하면 오버피팅입니다.');
+
+  if (data.focus) {
+    lines.push('## 이번에 확인하려던 것');
+    lines.push('');
+    lines.push(`> ${data.focus}`);
+    lines.push('');
+    lines.push('검토는 이 질문에 먼저 답해야 합니다. 나머지는 그다음입니다.');
+    lines.push('');
+  }
+
+  lines.push('> 이 리포트는 사실만 담습니다. 해석과 제안은 `/bgs-sim` 의 검토 단계에서');
+  lines.push('> 각 각도별 에이전트가 붙입니다.');
+  lines.push('>');
+  lines.push('> 밸런스를 결정하는 자리가 아닙니다. 아래 판수로는 완주율, 플레이타임, 명백한');
+  lines.push('> 좌석 쏠림까지만 말할 수 있고, 미세한 승률 차이로 수치를 조정하면 오버피팅입니다.');
   lines.push('');
 
   const flags = [];
@@ -364,10 +394,19 @@ function commandReport(slug) {
 
     if (stats.unfinished > 0) flags.push(`${players}인에서 끝나지 않은 판이 ${stats.unfinished}건입니다. 다른 어떤 지표보다 우선입니다.`);
 
-    // 30판에서 명백한 쏠림만 본다. 작은 편차는 언급하지 않는다.
+    /*
+     * 명백한 쏠림만 본다. 표본이 적으면 아예 판정하지 않는다.
+     * 3판에서 한 좌석이 83% 나오는 건 우연이지 신호가 아닌데, 경고로 올리면
+     * 쓸데없는 개정을 부른다. 판수 부족은 부족하다고 말하는 게 맞다.
+     */
+    const MIN_SAMPLE = 20;
     const expected = 1 / Number(players);
     const worst = stats.seatWinRate.reduce((acc, rate, seat) => (rate > (acc?.rate ?? 0) ? { seat, rate } : acc), null);
-    if (worst && worst.rate > expected * 2) {
+
+    if (stats.finished < MIN_SAMPLE) {
+      lines.push(`- 판수가 ${stats.finished}판이라 좌석 편중은 판단하지 않습니다 (최소 ${MIN_SAMPLE}판)`);
+      lines.push('');
+    } else if (worst && worst.rate > expected * 2) {
       flags.push(`${players}인에서 ${worst.seat + 1}번 좌석이 ${(worst.rate * 100).toFixed(0)}% 승률입니다 (기대 ${(expected * 100).toFixed(0)}%). 명백한 쏠림입니다.`);
     }
   }
@@ -375,6 +414,31 @@ function commandReport(slug) {
   const unused = [];
   for (const stats of Object.values(data.byPlayers)) {
     for (const entry of stats.moveUsage ?? []) if (entry.count === 0) unused.push(entry.move);
+  }
+
+  /*
+   * 전략 태그는 LLM이 스스로 붙인 것이라 표현이 제각각이다. 그래도 한 갈래가
+   * 압도적으로 이기면 지배 전략 후보로 볼 만하다. 표본이 적은 건 버린다.
+   */
+  const totalFinished = Object.values(data.byPlayers).reduce((sum, stats) => sum + stats.finished, 0);
+  const strategies = (data.strategies ?? []).filter((entry) => entry.played >= 3);
+  if (strategies.length > 0) {
+    lines.push('## 플레이어가 노린 전략');
+    lines.push('');
+    lines.push('LLM이 판마다 스스로 붙인 태그입니다. 표현이 제각각이라 그대로 믿을 수는 없지만,');
+    lines.push('한 갈래가 압도적으로 이기면 지배 전략 후보로 볼 만합니다.');
+    lines.push('');
+    for (const entry of strategies.slice(0, 12)) {
+      lines.push(`- ${entry.tag} — ${entry.played}회, 승률 ${(entry.winRate * 100).toFixed(0)}%`);
+    }
+    lines.push('');
+
+    // 좌석 편중과 같은 이유로 표본이 적으면 판정하지 않는다
+    if (totalFinished >= 20) {
+      for (const entry of strategies.filter((item) => item.played >= 10 && item.winRate >= 0.6)) {
+        flags.push(`"${entry.tag}" 가 ${entry.played}회 중 승률 ${(entry.winRate * 100).toFixed(0)}% 입니다. 지배 전략인지 확인이 필요합니다.`);
+      }
+    }
   }
 
   lines.push('## 눈에 띄는 것');
@@ -411,11 +475,32 @@ function commandReport(slug) {
     }
   }
 
+  lines.push('---');
+  lines.push('');
+  lines.push('## 다음: 검토');
+  lines.push('');
+  lines.push('여기까지는 사실입니다. 이제 각 각도에서 해석과 제안이 필요합니다.');
+  lines.push('`/bgs-sim` 의 검토 단계나 `/bgs-review` 로 넘기세요.');
+  lines.push('');
+  lines.push('- **컨셉과 테마** — 이 결과가 concept.md 의 핵심 동사를 만들어내고 있는가');
+  lines.push('- **메커니즘** — 겉도는 것, 다운타임, 지배 전략의 구조적 원인');
+  lines.push('- **룰** — 위의 "헷갈린 지점"이 룰북 결함인지 엔진 describe 누락인지');
+  lines.push('- **밸런스** — 수치로 뒷받침되는 것과 판수 부족으로 보류할 것');
+  lines.push('');
+
   const outFile = path.join(projectDir(slug), 'playtest', `sim-${data.at.slice(0, 10)}.md`);
   mkdirSync(path.dirname(outFile), { recursive: true });
   writeFileSync(outFile, `${lines.join('\n')}\n`);
 
-  output({ command: 'sim report', slug, source: files[files.length - 1], output: path.relative(ROOT, outFile), flags });
+  output({
+    command: 'sim report',
+    slug,
+    source: files[files.length - 1],
+    output: path.relative(ROOT, outFile),
+    focus: data.focus ?? null,
+    flags,
+    next: '이 리포트를 각 각도별 에이전트에게 넘겨 해석과 제안을 받으세요.',
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -457,8 +542,9 @@ const USAGE = `
   estimate <slug> [--games 30] [--model gpt-5.4-nano]
       판당 결정 수를 실측해 비용과 시간을 추정한다.
 
-  run <slug> [--games 30] [--players 2,3,4] [--model] [--concurrency 20]
+  run <slug> [--games 30] [--players 2,3,4] [--model] [--concurrency 20] [--focus "..."]
       LLM 플레이. 룰북을 읽고 판단하므로 "룰북만 읽고 이해되는가"가 함께 검증된다.
+      --focus 에 이번에 확인하려는 것을 적어두면 리포트와 검토가 그걸 먼저 다룬다.
 
   report <slug>
       최근 로그를 playtest/sim-YYYY-MM-DD.md 로 정리한다.
@@ -481,6 +567,7 @@ const { values, positionals } = parseArgs({
     model: { type: 'string' },
     concurrency: { type: 'string' },
     'max-turns': { type: 'string' },
+    focus: { type: 'string' },
     port: { type: 'string' },
     help: { type: 'boolean', short: 'h' },
   },
