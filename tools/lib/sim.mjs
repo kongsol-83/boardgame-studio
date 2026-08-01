@@ -139,7 +139,8 @@ export async function playGame(engine, { playerCount, rng, chooser, maxTurns = 2
       return { finished: false, reason: 'illegalChoice', turns, history, state };
     }
 
-    history.push({ turn: turns, player, move: moves[index], options: moves.length, meta: choice?.meta });
+    // index 를 남겨야 나중에 같은 시드로 리플레이할 수 있다
+    history.push({ turn: turns, player, index, move: moves[index], options: moves.length });
     state = engine.applyMove(state, moves[index]);
     turns += 1;
   }

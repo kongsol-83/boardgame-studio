@@ -39,8 +39,23 @@ export class LlmError extends Error {
  * @param {number} [options.concurrency] 판끼리 독립이므로 동시에 돌린다
  * @param {number} [options.maxRetries]
  */
-export function createLlm({ apiKey, model = DEFAULT_MODEL, concurrency = 20, maxRetries = 4, timeoutMs = 60_000 } = {}) {
+export function createLlm({
+  apiKey,
+  model = DEFAULT_MODEL,
+  concurrency = 20,
+  maxRetries = 4,
+  timeoutMs = 120_000,
+  /*
+   * 추론 모델은 max_completion_tokens 안에서 추론 토큰을 먼저 쓴다. 룰북 전체가
+   * 프롬프트에 들어가면 추론이 길어져서 예산을 다 먹고 본문이 빈 채로 돌아온다.
+   * 수를 고르는 판단은 깊은 추론이 필요 없으므로 낮게 둔다.
+   * 지원하지 않는 모델이면 자동으로 빼고 다시 보낸다.
+   */
+  reasoningEffort = process.env.OPENAI_REASONING_EFFORT ?? 'low',
+} = {}) {
   if (!apiKey) throw new LlmError('OpenAI API 키가 필요합니다');
+
+  let sendReasoningEffort = Boolean(reasoningEffort);
 
   const usage = { calls: 0, inputTokens: 0, cachedTokens: 0, outputTokens: 0, retries: 0, failures: 0 };
 
@@ -67,9 +82,10 @@ export function createLlm({ apiKey, model = DEFAULT_MODEL, concurrency = 20, max
    * JSON 객체 하나를 받아온다.
    * @param {{ system: string, user: string, maxTokens?: number }} request
    */
-  async function askJson({ system, user, maxTokens = 300 }) {
+  async function askJson({ system, user, maxTokens = 1200 }) {
     if (fatal) throw fatal;
     await acquire();
+    let budget = maxTokens;
     try {
       if (fatal) throw fatal;
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -89,7 +105,8 @@ export function createLlm({ apiKey, model = DEFAULT_MODEL, concurrency = 20, max
                 { role: 'user', content: user },
               ],
               response_format: { type: 'json_object' },
-              max_completion_tokens: maxTokens,
+              max_completion_tokens: budget,
+              ...(sendReasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
             }),
           });
         } catch (error) {
@@ -110,6 +127,14 @@ export function createLlm({ apiKey, model = DEFAULT_MODEL, concurrency = 20, max
         }
 
         const body = await response.text();
+
+        // reasoning_effort 를 모르는 모델이면 빼고 다시 보낸다
+        if (response.status === 400 && sendReasoningEffort && body.includes('reasoning_effort')) {
+          sendReasoningEffort = false;
+          usage.retries += 1;
+          continue;
+        }
+
         if (!response.ok) {
           usage.failures += 1;
           // 4xx는 재시도해도 같은 답이 온다. 남은 판을 태우지 않고 전체를 멈춘다.
@@ -142,12 +167,39 @@ export function createLlm({ apiKey, model = DEFAULT_MODEL, concurrency = 20, max
         usage.cachedTokens += details.prompt_tokens_details?.cached_tokens ?? 0;
         usage.outputTokens += details.completion_tokens ?? 0;
 
-        const content = parsed.choices?.[0]?.message?.content ?? '';
+        const choice = parsed.choices?.[0] ?? {};
+        const content = choice.message?.content ?? '';
+        const reasoningTokens = details.completion_tokens_details?.reasoning_tokens ?? 0;
+
+        /*
+         * 추론 토큰이 예산을 다 먹으면 본문이 빈 채로 finish_reason: length 가 온다.
+         * 예산을 늘려 다시 시도한다. 프롬프트가 길수록 추론이 길어지므로 흔한 일이다.
+         */
+        if (content.trim() === '' && choice.finish_reason === 'length') {
+          if (attempt === maxRetries) {
+            usage.failures += 1;
+            throw new LlmError(
+              [
+                `모델이 빈 응답을 냈습니다. 추론 토큰 ${reasoningTokens}개가 예산 ${budget}을 다 썼습니다.`,
+                '',
+                `  - OPENAI_REASONING_EFFORT 를 low 나 none 으로 낮추세요 (지금 ${reasoningEffort})`,
+                '  - 또는 룰북을 줄여 프롬프트를 짧게 만드세요',
+              ].join('\n'),
+            );
+          }
+          budget = Math.min(budget * 2, 8000);
+          usage.retries += 1;
+          continue;
+        }
+
         try {
           return JSON.parse(content);
         } catch {
           // 모델이 JSON을 안 냈으면 한 번 더 시도한다
-          if (attempt === maxRetries) { usage.failures += 1; throw new LlmError(`JSON을 받지 못했습니다: ${content.slice(0, 200)}`); }
+          if (attempt === maxRetries) {
+            usage.failures += 1;
+            throw new LlmError(`JSON을 받지 못했습니다 (finish_reason: ${choice.finish_reason}): ${content.slice(0, 200)}`);
+          }
           usage.retries += 1;
           continue;
         }

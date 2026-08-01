@@ -266,6 +266,18 @@ async function commandRun(slug, values) {
     log(`  ${playerCount}인 ${results.length}판 완료`);
   }
 
+  /*
+   * 인원별 첫 판만 수 인덱스를 남긴다. 90판 전부의 이력을 담으면 로그가 커지는데,
+   * 리플레이는 "왜 이렇게 됐는지"를 눈으로 보려는 것이라 몇 판이면 충분하다.
+   * 엔진이 결정적이므로 시드와 인덱스만 있으면 그대로 재생된다.
+   */
+  const samples = Object.entries(perPlayers).map(([playerCount, stats]) => ({
+    playerCount: Number(playerCount),
+    seed: 1,
+    moves: (stats.raw?.[0]?.history ?? []).map((entry) => entry.index),
+    scores: stats.raw?.[0]?.scores ?? null,
+  }));
+
   // 로그 저장
   mkdirSync(logDir(slug), { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
@@ -284,6 +296,7 @@ async function commandRun(slug, values) {
         ),
         reviews,
         confusions,
+        samples,
       },
       null,
       2,
