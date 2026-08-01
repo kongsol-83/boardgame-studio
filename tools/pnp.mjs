@@ -34,6 +34,27 @@ const CARD_PADDING_MM = 3;
 /** 손으로 자르면 1~2mm는 틀어진다. 잘리면 안 되는 요소는 이만큼 안쪽에 둔다. */
 const SAFE_MARGIN_MM = 3;
 
+/**
+ * 글자 크기. 포커 카드(63.5mm)를 기준으로 잡고 카드 폭에 비례해 조정한다.
+ *
+ * 하한이 중요하다. 보드게임 카드 본문은 8pt가 실질적 하한이고, 그 아래로 내려가면
+ * 인쇄물에서 읽히지 않는다. 카드가 작다고 무한정 줄이면 인쇄해봐야 못 읽는 카드가
+ * 나오므로, 안 들어가면 줄이지 말고 --check 로 잡아서 문구를 줄이는 게 맞다.
+ *
+ * 수치는 본문보다 크게 둔다. 코스트와 파워는 한눈에 읽혀야 하는 정보다.
+ */
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+function typeScale(widthMm, scale = 1) {
+  const k = (widthMm / 63.5) * scale;
+  return {
+    id: clamp(5.5 * k, 4.5, 8),
+    title: clamp(12 * k, 8, 18),
+    stats: clamp(9.5 * k, 7.5, 14),
+    body: clamp(8.5 * k, 7, 12),
+  };
+}
+
 const ID_COLUMNS = ['id', 'card_id', 'component_id', 'code'];
 const NAME_COLUMNS = ['name', 'title', '이름', '제목'];
 const TEXT_COLUMNS = ['text', 'rules', 'effect', '효과', '텍스트'];
@@ -93,7 +114,7 @@ function loadComponentRows(slug, componentId) {
 // 카드 한 장 그리기
 // ---------------------------------------------------------------------------
 
-function drawCard(doc, { x, y, widthMm, heightMm, row, columns, fontSize, artDir }) {
+function drawCard(doc, { x, y, widthMm, heightMm, row, columns, type, artDir }) {
   const w = pt(widthMm);
   const h = pt(heightMm);
 
@@ -135,35 +156,35 @@ function drawCard(doc, { x, y, widthMm, heightMm, row, columns, fontSize, artDir
   );
 
   if (idColumn && row[idColumn]) {
-    doc.fontSize(fontSize * 0.62).fillColor('#999999');
+    doc.fontSize(type.id).fillColor('#999999');
     doc.text(String(row[idColumn]), innerX, cursor, { width: innerW, align: 'left', lineBreak: false });
-    cursor += fontSize * 0.62 + 2;
+    cursor += type.id + 2;
   }
 
   if (nameColumn && row[nameColumn]) {
-    doc.fontSize(fontSize * 1.15).fillColor('#111111');
-    doc.text(String(row[nameColumn]), innerX, cursor, { width: innerW, align: 'center', ellipsis: true, height: fontSize * 2.6 });
-    cursor += fontSize * 1.15 + 4;
+    doc.fontSize(type.title).fillColor('#111111');
+    doc.text(String(row[nameColumn]), innerX, cursor, { width: innerW, align: 'center', ellipsis: true, height: type.title * 2.4 });
+    cursor += type.title + 5;
   }
 
-  // 수치는 이름 아래 한 줄에 모은다
+  // 수치는 이름 아래 한 줄에 모은다. 본문보다 크게 둔다
   if (numericColumns.length > 0) {
     const label = numericColumns.map((column) => `${column} ${row[column]}`).join('  ·  ');
-    doc.fontSize(fontSize * 0.8).fillColor('#333333');
+    doc.fontSize(type.stats).fillColor('#333333');
     doc.text(label, innerX, cursor, { width: innerW, align: 'center', ellipsis: true, lineBreak: false });
-    cursor += fontSize * 0.8 + 4;
+    cursor += type.stats + 5;
   }
 
   if (textColumn && row[textColumn]) {
-    doc.fontSize(fontSize * 0.82).fillColor('#222222');
+    doc.fontSize(type.body).fillColor('#222222');
     const available = y + h - safe - cursor;
-    if (available > fontSize) {
+    if (available > type.body) {
       doc.text(String(row[textColumn]), innerX, cursor + pad * 0.3, {
         width: innerW,
         height: available,
         align: 'left',
         ellipsis: true,
-        lineGap: 1,
+        lineGap: 1.5,
       });
     }
   }
@@ -262,7 +283,7 @@ function renderTiled(doc, component, { print, artDir, fontSize }) {
 // 텍스트 오버플로 검사
 // ---------------------------------------------------------------------------
 
-function checkOverflow(doc, component, rows, fontSize) {
+function checkOverflow(doc, component, rows, type) {
   if (rows.length === 0) return [];
   const columns = Object.keys(rows[0]);
   const textColumn = pick(columns, TEXT_COLUMNS);
@@ -274,15 +295,15 @@ function checkOverflow(doc, component, rows, fontSize) {
   const innerW = pt(widthMm - SAFE_MARGIN_MM * 2);
 
   // 이름과 수치 줄이 차지하고 남는 높이
-  const used = fontSize * 0.62 + 2 + fontSize * 1.15 + 4 + fontSize * 0.8 + 4;
+  const used = type.id + 2 + type.title + 5 + type.stats + 5;
   const available = pt(heightMm - SAFE_MARGIN_MM * 2) - used;
 
   const over = [];
-  doc.fontSize(fontSize * 0.82);
+  doc.fontSize(type.body);
   for (const row of rows) {
     const text = String(row[textColumn] ?? '').trim();
     if (!text) continue;
-    const needed = doc.heightOfString(text, { width: innerW, lineGap: 1 });
+    const needed = doc.heightOfString(text, { width: innerW, lineGap: 1.5 });
     if (needed > available) {
       over.push({
         id: idColumn ? row[idColumn] : null,
@@ -366,8 +387,9 @@ if (values.check) {
 
   const report = targets.map((component) => {
     const rows = allRows.get(component.id) ?? [];
-    const fontSize = Math.min(12, Math.max(5, component.size_mm[0] / 8));
-    return { component: component.id, rows: rows.length, fontSize: Number(fontSize.toFixed(1)), overflow: checkOverflow(probe, component, rows, fontSize) };
+    const type = typeScale(component.size_mm?.[0] ?? 63.5, print.font_scale ?? 1);
+    const rounded = Object.fromEntries(Object.entries(type).map(([key, value]) => [key, Number(value.toFixed(1))]));
+    return { component: component.id, rows: rows.length, fontSizes: rounded, overflow: checkOverflow(probe, component, rows, type) };
   });
   probe.end();
 
@@ -409,7 +431,7 @@ for (const component of targets) {
   if (!(widthMm > 0) || !(heightMm > 0)) continue;
 
   const artDir = path.join(artRoot, component.id);
-  const fontSize = Math.min(12, Math.max(5, widthMm / 8));
+  const type = typeScale(widthMm, print.font_scale ?? 1);
 
   // 시트보다 크면 조각으로
   if (widthMm > area.width || heightMm > area.height) {
@@ -462,7 +484,7 @@ for (const component of targets) {
         heightMm,
         row,
         columns,
-        fontSize,
+        type,
         artDir,
       });
     });
