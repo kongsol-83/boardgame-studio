@@ -86,3 +86,50 @@ jobs:
       # 문법 검사와 단위 테스트도 여기 포함된다.
       - name: npm test
         run: npm test
+
+  # 예제 프로젝트로 파이프라인을 실제로 돌린다. 단위 테스트는 함수를 보지만
+  # 이건 도구들이 서로 맞물려 돌아가는지를 본다. API 키가 필요 없는 것만 실행한다.
+  example:
+    name: 예제 프로젝트 파이프라인
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
+
+      # 리눅스 러너에는 한글 폰트가 없다. pdfkit 내장 폰트로는 한글을 못 그리므로
+      # 오버플로 검사와 렌더 양쪽 모두 이게 먼저 있어야 성립한다.
+      - name: 한글 폰트 설치
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-nanum
+          test -f /usr/share/fonts/truetype/nanum/NanumGothic.ttf
+
+      - name: 규격 검증
+        run: node tools/spec.mjs validate example-tidepool
+
+      - name: mm에서 픽셀 산출
+        run: node tools/spec.mjs resolve example-tidepool
+
+      - name: A4 시트 계산
+        run: node tools/spec.mjs sheet example-tidepool
+
+      - name: 수치 분석
+        run: node tools/balance.mjs example-tidepool --cost cost --value power
+
+      - name: 텍스트 오버플로 검사
+        run: node tools/pnp.mjs example-tidepool --check
+
+      - name: PDF 렌더
+        run: |
+          node tools/pnp.mjs example-tidepool
+          # 빈 파일이 나와도 종료 코드는 0일 수 있으므로 크기를 확인한다
+          find projects/example-tidepool/pnp -name '*.pdf' -size +1k | grep -q .
+
+      - name: 엔진 스모크 (랜덤 봇)
+        run: node tools/sim.mjs smoke example-tidepool --games 2000

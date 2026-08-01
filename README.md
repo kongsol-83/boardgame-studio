@@ -148,13 +148,22 @@ node tools/config.mjs      # 지금 설정 확인
 
 ### 키 없이 되는 것
 
-파이프라인의 상당 부분은 오프라인으로 돌아갑니다. 클론하고 `npm install` 만 하면 예제
-프로젝트로 아래가 바로 동작합니다.
+파이프라인의 상당 부분은 오프라인으로 돌아갑니다. 클론하고 `npm install` 만 하면
+[예제 프로젝트](projects/example-tidepool/)로 아래가 바로 동작합니다.
 
-- 컴포넌트 규격 검증과 mm에서 픽셀 산출
-- A4 프린트 앤 플레이 PDF 렌더
-- 랜덤 봇 규칙 엔진 스모크 테스트
-- 컴포넌트 CSV 수치 분석
+```bash
+node tools/spec.mjs resolve example-tidepool    # mm -> 픽셀, 유효 DPI
+node tools/spec.mjs sheet example-tidepool      # A4 몇 장이 필요한가
+node tools/balance.mjs example-tidepool --cost cost --value power
+node tools/pnp.mjs example-tidepool             # PDF 렌더
+node tools/sim.mjs smoke example-tidepool       # 랜덤 봇 엔진 검사
+node tools/sim.mjs serve example-tidepool       # 브라우저에서 직접 플레이
+```
+
+예제에는 도구가 무엇을 잡아내는지 보여주려고 **일부러 심어둔 것들**이 있습니다.
+코스트 대비 튀는 카드, A4를 넘는 보드, 이미지 모델이 생성 못 하는 4:1 비율 컴포넌트,
+너무 작아서 키워야 하는 토큰, 그리고 답이 빠진 룰북. 자세한 건
+[예제 README](projects/example-tidepool/README.md)에 있습니다.
 
 키가 필요한 건 셋뿐입니다. BGG 조사(BGG 토큰), LLM 플레이테스트와 아트 생성(OpenAI 키).
 
@@ -375,12 +384,21 @@ node tools/config.mjs      # show the resolved config
 ### What works without any API key
 
 Most of the pipeline runs offline. Clone, `npm install`, and these work immediately
-against the bundled example project:
+against the [bundled example project](projects/example-tidepool/):
 
-- component spec validation and mm-to-pixel resolution
-- A4 print-and-play PDF rendering
-- rules-engine smoke testing with a random bot
-- numeric balance analysis over component CSVs
+```bash
+node tools/spec.mjs resolve example-tidepool    # mm -> pixels, effective DPI
+node tools/spec.mjs sheet example-tidepool      # how many A4 sheets
+node tools/balance.mjs example-tidepool --cost cost --value power
+node tools/pnp.mjs example-tidepool             # render the PDF
+node tools/sim.mjs smoke example-tidepool       # random-bot engine check
+node tools/sim.mjs serve example-tidepool       # play it in a browser
+```
+
+The example deliberately contains problems so you can see what the tools catch: a card
+that is overpowered for its cost, a board that does not fit on A4, a 4:1 component the
+image model cannot generate, a token too small to meet the minimum resolution, and a
+rulebook with gaps. See the [example README](projects/example-tidepool/README.md).
 
 Only three things need a key: BGG research (BGG token), LLM playtesting, and art
 generation (OpenAI key).

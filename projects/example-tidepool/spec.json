@@ -1,0 +1,52 @@
+{
+  "game": { "title": "조수 웅덩이", "players": [2, 4], "playtime": [25, 35] },
+  "print": { "sheet": "A4", "margin_mm": 9, "dpi": 300, "cut_gap_mm": 0 },
+  "anchor_sets": ["nature", "scene"],
+  "components": [
+    {
+      "id": "action-card",
+      "type": "card",
+      "label": "액션 카드",
+      "count": 28,
+      "size_mm": [63.5, 88],
+      "art": "nature",
+      "back": "shared"
+    },
+    {
+      "id": "terrain-tile",
+      "type": "tile",
+      "label": "지형 타일",
+      "count": 24,
+      "size_mm": [50, 50],
+      "art": "scene",
+      "back": "none"
+    },
+    {
+      "id": "resource-token",
+      "type": "token",
+      "label": "자원 토큰",
+      "count": 40,
+      "size_mm": [20, 20],
+      "art": null,
+      "back": "none"
+    },
+    {
+      "id": "main-board",
+      "type": "board",
+      "label": "메인 보드",
+      "count": 1,
+      "size_mm": [420, 297],
+      "art": "scene",
+      "back": "none"
+    },
+    {
+      "id": "marker-strip",
+      "type": "other",
+      "label": "물때 표시 띠",
+      "count": 2,
+      "size_mm": [100, 25],
+      "art": null,
+      "back": "none"
+    }
+  ]
+}

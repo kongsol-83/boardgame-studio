@@ -383,7 +383,13 @@ for (const component of targets) {
 }
 if (!anyNonAscii) anyNonAscii = needsUnicodeFont(spec.game?.title ?? '');
 
-const font = resolveFont({ configured: print.font, requireCjk: anyNonAscii });
+let font;
+try {
+  font = resolveFont({ configured: print.font, requireCjk: anyNonAscii });
+} catch (error) {
+  // 지정한 폰트가 없을 때. 스택 트레이스는 여기서 도움이 안 된다
+  bail(error.message);
+}
 if (!font) bail(fontHelp(anyNonAscii));
 
 const artRoot = path.join(ROOT, 'projects', slug, 'art');
