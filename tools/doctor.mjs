@@ -104,6 +104,37 @@ if (dumps.length === 0) {
 if (existsSync(path.join(ROOT, 'data', 'bgg.sqlite'))) ok('BGG 인덱스', 'data/bgg.sqlite 있음 · 상태는 npm run bgg -- stats');
 else warn('BGG 인덱스', '없음', 'node tools/bgg/cli.mjs seed 후 hydrate');
 
+// --- 키가 실제로 통하는지 (--online) -----------------------------------------
+if (process.argv.includes('--online')) {
+  const probe = async (name, url, headers) => {
+    try {
+      const response = await fetch(url, { headers });
+      if (response.ok) return { ok: true };
+      const body = await response.text();
+      return { ok: false, status: response.status, body: body.slice(0, 200).replace(/\s+/g, ' ') };
+    } catch (error) {
+      return { ok: false, status: 0, body: error.message };
+    }
+  };
+
+  if (process.env.BGG_API_TOKEN?.trim()) {
+    // www 를 붙이면 인증이 깨지므로 붙이지 않는다
+    const result = await probe('BGG', 'https://boardgamegeek.com/xmlapi2/thing?id=1', {
+      Authorization: `Bearer ${process.env.BGG_API_TOKEN.trim()}`,
+    });
+    if (result.ok) ok('BGG 토큰 (온라인)', '실제 호출 성공');
+    else fail('BGG 토큰 (온라인)', `${result.status} ${result.body}`, 'https://boardgamegeek.com/applications 에서 토큰을 다시 확인하세요');
+  }
+
+  if (process.env.OPENAI_API_KEY?.trim()) {
+    const result = await probe('OpenAI', 'https://api.openai.com/v1/models', {
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY.trim()}`,
+    });
+    if (result.ok) ok('OpenAI 키 (온라인)', '실제 호출 성공');
+    else fail('OpenAI 키 (온라인)', `${result.status} ${result.body}`, 'https://platform.openai.com/api-keys 에서 키를 다시 확인하거나 새로 발급하세요');
+  }
+}
+
 // --- 출력 -------------------------------------------------------------------
 const ICON = { ok: '  OK  ', warn: ' 주의 ', fail: ' 실패 ' };
 

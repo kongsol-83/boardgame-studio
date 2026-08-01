@@ -1,0 +1,172 @@
+/**
+ * OpenAI 텍스트 클라이언트. 시뮬레이션 플레이어가 쓴다.
+ *
+ * 보드게임은 턴제라 실시간 제약이 없고, 게임마다 휴리스틱 봇을 짜는 건 진짜 비용인
+ * 데다 나쁜 봇은 잘못된 결론을 준다. 그래서 LLM이 매 수를 판단한다.
+ *
+ * 비용은 프롬프트 캐싱이 대부분을 결정한다. 룰 요약이 매 턴 동일하므로 시스템
+ * 메시지 맨 앞에 두면 자동으로 캐시된다. 그래서 캐시 히트를 따로 집계해 보여준다.
+ */
+
+const ENDPOINT = 'https://api.openai.com/v1/chat/completions';
+
+/** 1M 토큰당 달러. 판당 비용을 추정하려면 필요하다. */
+export const PRICING = {
+  'gpt-5.4-nano': { input: 0.2, cached: 0.02, output: 1.25 },
+  'gpt-5.4-mini': { input: 0.75, cached: 0.075, output: 4.5 },
+  'gpt-5.4': { input: 2.5, cached: 0.25, output: 15 },
+  'gpt-5.6-luna': { input: 0.2, cached: 0.02, output: 1.2 },
+  'gpt-5.6-terra': { input: 2, cached: 0.2, output: 12 },
+};
+
+export const DEFAULT_MODEL = 'gpt-5.4-nano';
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export class LlmError extends Error {
+  constructor(message, { status, body } = {}) {
+    super(message);
+    this.name = 'LlmError';
+    this.status = status;
+    this.body = body;
+  }
+}
+
+/**
+ * @param {object} options
+ * @param {string} options.apiKey
+ * @param {string} [options.model]
+ * @param {number} [options.concurrency] 판끼리 독립이므로 동시에 돌린다
+ * @param {number} [options.maxRetries]
+ */
+export function createLlm({ apiKey, model = DEFAULT_MODEL, concurrency = 20, maxRetries = 4, timeoutMs = 60_000 } = {}) {
+  if (!apiKey) throw new LlmError('OpenAI API 키가 필요합니다');
+
+  const usage = { calls: 0, inputTokens: 0, cachedTokens: 0, outputTokens: 0, retries: 0, failures: 0 };
+
+  /*
+   * 인증 실패처럼 재시도해도 소용없는 오류가 나면 즉시 멈춘다.
+   * 이게 없으면 진행 중이던 수십 개 요청이 계속 날아가고, 그 상태로 프로세스를
+   * 끝내면 libuv가 죽는다. 실패 하나에 남은 판을 다 태울 이유도 없다.
+   */
+  let fatal = null;
+
+  // 동시 실행 제한. 초과분은 순서대로 기다린다.
+  let active = 0;
+  const waiting = [];
+  const acquire = () =>
+    active < concurrency
+      ? ((active += 1), Promise.resolve())
+      : new Promise((resolve) => waiting.push(resolve)).then(() => { active += 1; });
+  const release = () => {
+    active -= 1;
+    waiting.shift()?.();
+  };
+
+  /**
+   * JSON 객체 하나를 받아온다.
+   * @param {{ system: string, user: string, maxTokens?: number }} request
+   */
+  async function askJson({ system, user, maxTokens = 300 }) {
+    if (fatal) throw fatal;
+    await acquire();
+    try {
+      if (fatal) throw fatal;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        let response;
+        try {
+          response = await fetch(ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+            signal: controller.signal,
+            body: JSON.stringify({
+              model,
+              // 시스템 메시지가 매 턴 동일해야 캐시가 걸린다. 상황은 user 로만 보낸다.
+              messages: [
+                { role: 'system', content: system },
+                { role: 'user', content: user },
+              ],
+              response_format: { type: 'json_object' },
+              max_completion_tokens: maxTokens,
+            }),
+          });
+        } catch (error) {
+          if (attempt === maxRetries) { usage.failures += 1; throw new LlmError(`네트워크 오류: ${error.message}`); }
+          usage.retries += 1;
+          await sleep(Math.min(1000 * 2 ** (attempt - 1), 15_000));
+          continue;
+        } finally {
+          clearTimeout(timer);
+        }
+
+        if (response.status === 429 || response.status >= 500) {
+          if (attempt === maxRetries) { usage.failures += 1; throw new LlmError(`${response.status} 응답이 계속됩니다`, { status: response.status }); }
+          usage.retries += 1;
+          const retryAfter = Number(response.headers.get('retry-after'));
+          await sleep(Number.isFinite(retryAfter) ? retryAfter * 1000 : Math.min(2000 * 2 ** (attempt - 1), 30_000));
+          continue;
+        }
+
+        const body = await response.text();
+        if (!response.ok) {
+          usage.failures += 1;
+          // 4xx는 재시도해도 같은 답이 온다. 남은 판을 태우지 않고 전체를 멈춘다.
+          fatal = new LlmError(
+            response.status === 401 || response.status === 403
+              ? [
+                  `OpenAI 인증에 실패했습니다 (${response.status}).`,
+                  '',
+                  '  - .env 의 OPENAI_API_KEY 가 맞는지 확인하세요',
+                  '  - 키가 만료되었거나 폐기되지 않았는지 https://platform.openai.com/api-keys 에서 확인하세요',
+                  `  - 응답: ${body.slice(0, 300)}`,
+                ].join('\n')
+              : response.status === 404
+                ? [
+                    `모델 "${model}" 을 찾을 수 없습니다 (404).`,
+                    '',
+                    '  - --model 로 다른 모델을 지정하거나 .env 의 OPENAI_SIM_MODEL 을 확인하세요',
+                    `  - 응답: ${body.slice(0, 300)}`,
+                  ].join('\n')
+                : `OpenAI가 ${response.status}를 돌려줬습니다: ${body.slice(0, 300)}`,
+            { status: response.status, body: body.slice(0, 500) },
+          );
+          throw fatal;
+        }
+
+        const parsed = JSON.parse(body);
+        const details = parsed.usage ?? {};
+        usage.calls += 1;
+        usage.inputTokens += details.prompt_tokens ?? 0;
+        usage.cachedTokens += details.prompt_tokens_details?.cached_tokens ?? 0;
+        usage.outputTokens += details.completion_tokens ?? 0;
+
+        const content = parsed.choices?.[0]?.message?.content ?? '';
+        try {
+          return JSON.parse(content);
+        } catch {
+          // 모델이 JSON을 안 냈으면 한 번 더 시도한다
+          if (attempt === maxRetries) { usage.failures += 1; throw new LlmError(`JSON을 받지 못했습니다: ${content.slice(0, 200)}`); }
+          usage.retries += 1;
+          continue;
+        }
+      }
+      throw new LlmError('재시도를 모두 소진했습니다');
+    } finally {
+      release();
+    }
+  }
+
+  return { askJson, usage, model };
+}
+
+/** 토큰 사용량을 달러로. 모르는 모델이면 null. */
+export function estimateCost(usage, model) {
+  const price = PRICING[model];
+  if (!price) return null;
+  const fresh = Math.max(0, usage.inputTokens - usage.cachedTokens);
+  const dollars =
+    (fresh * price.input + usage.cachedTokens * price.cached + usage.outputTokens * price.output) / 1_000_000;
+  return Number(dollars.toFixed(4));
+}
