@@ -142,16 +142,26 @@ async function validateSyntax() {
   const files = await walk(ROOT, (name) => name.endsWith('.mjs') || name.endsWith('.js'));
   const results = await Promise.all(
     files.map(async (file) => {
+      // Windows 편집기가 UTF-8 BOM을 붙이면 shebang이 깨지면서
+      // "Invalid or unexpected token" 이라는 알기 어려운 오류가 난다.
+      const head = await readFile(file);
+      if (head[0] === 0xef && head[1] === 0xbb && head[2] === 0xbf) {
+        return { file, message: 'UTF-8 BOM이 붙어 있습니다. BOM 없이 저장하세요' };
+      }
+
       try {
         await execFileAsync(process.execPath, ['--check', file]);
         return null;
       } catch (error) {
-        return { file, message: String(error.stderr || error.message).trim().split('\n')[0] };
+        const stderr = String(error.stderr || error.message).trim().split('\n');
+        // node --check 는 파일:줄 / 소스 / 캐럿 / 실제 메시지 순으로 낸다.
+        const detail = stderr.find((line) => /Error/.test(line)) ?? stderr[0];
+        return { file, message: `${detail} (${stderr[0]})` };
       }
     }),
   );
   for (const result of results) {
-    if (result) fail(result.file, `문법 오류: ${result.message}`);
+    if (result) fail(result.file, result.message);
   }
   return files.length;
 }
