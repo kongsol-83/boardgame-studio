@@ -41,6 +41,10 @@
   유효 DPI 보고), `sheet`(A4 몇 장, 시트보다 큰 건 페이지 방향을 양쪽 다 계산해 분할),
   `presets` 를 낸다
 - `presets/components.json` — BGG 슬리브 레퍼런스 기준 표준 카드 규격과 타일·토큰·보드 관례
+- `.cursor/rules/shell.mdc` — 셸을 최소한으로 쓰는 규칙. Windows PowerShell 5.1의
+  인코딩 기본값과 인라인 스크립트 파싱으로 실제로 시간을 날린 사례에서 나왔다
+- `npm run doctor` — 개발 환경 점검. Node 버전, PowerShell 7 여부, git 신원, 키 설정,
+  랭킹 덤프 신선도, 인덱스 상태를 한 번에 보여준다
 
 ### Changed
 

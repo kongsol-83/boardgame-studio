@@ -82,9 +82,13 @@ git clone https://github.com/kongsol-83/boardgame-studio.git
 cd boardgame-studio
 npm install
 cp .env.example .env      # 가지고 있는 키만 채우면 됩니다
+npm run doctor            # 무엇이 준비됐고 무엇이 빠졌는지 확인
 ```
 
 Cursor에서 폴더를 열고 `/bgs` 를 입력하면 사용 가능한 스킬이 뜹니다.
+
+Windows에서 쓰신다면 **PowerShell 7 이상**을 권합니다. 기본 탑재된 5.1은 인코딩 기본값
+때문에 파일이 깨지는 경우가 있습니다. `npm run doctor` 가 확인해줍니다.
 
 ### 산출물 언어 바꾸기
 
@@ -260,9 +264,13 @@ git clone https://github.com/kongsol-83/boardgame-studio.git
 cd boardgame-studio
 npm install
 cp .env.example .env      # then fill in the keys you have
+npm run doctor            # reports what is ready and what is missing
 ```
 
 Open the folder in Cursor and type `/bgs` to see the available skills.
+
+On Windows, use **PowerShell 7 or newer**. The bundled 5.1 has encoding defaults that
+corrupt files. `npm run doctor` checks for it.
 
 ### Choosing the output language
 

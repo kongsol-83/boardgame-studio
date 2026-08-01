@@ -28,6 +28,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "doctor": "node tools/doctor.mjs",
     "validate": "node tools/validate.mjs",
     "test": "node tools/validate.mjs && node --test \"tests/**/*.test.mjs\"",
     "bgg": "node tools/bgg/cli.mjs",

@@ -96,9 +96,26 @@ git clone https://github.com/kongsol-83/boardgame-studio.git
 cd boardgame-studio
 npm install
 cp .env.example .env
+npm run doctor          # 무엇이 준비됐고 무엇이 빠졌는지 확인
 ```
 
 Node.js 24 이상이 필요합니다. `node:sqlite` 를 쓰기 때문입니다.
+
+### Windows에서 작업한다면
+
+**PowerShell 7 이상을 쓰세요.** Windows에 기본 탑재된 PowerShell 5.1은 `>` 리다이렉션을
+UTF-16으로 쓰고, `Set-Content -Encoding UTF8` 이 BOM을 붙이고, 콘솔 인코딩이 UTF-8이
+아닙니다. BOM이 붙은 `.mjs` 는 shebang이 깨져서 원인을 찾기 어려운 문법 오류가 납니다.
+
+```powershell
+winget install --id Microsoft.PowerShell --source winget
+```
+
+설치 후 에디터의 터미널 기본 프로필을 `pwsh` 로 바꿉니다. `npm run doctor` 가 확인해줍니다.
+
+AI 에이전트로 작업한다면 `.cursor/rules/shell.mdc` 를 읽어보세요. 셸을 최소한으로 쓰고
+파일은 편집 도구로 다루라는 규칙이 들어 있습니다. 이 규칙들은 전부 실제로 시간을 날린
+사례에서 나왔습니다.
 
 ## PR 전에 돌릴 것
 
@@ -228,9 +245,26 @@ git clone https://github.com/kongsol-83/boardgame-studio.git
 cd boardgame-studio
 npm install
 cp .env.example .env
+npm run doctor          # reports what is ready and what is missing
 ```
 
 Node.js 24 or newer is required, because of `node:sqlite`.
+
+### If you work on Windows
+
+**Use PowerShell 7 or newer.** The bundled Windows PowerShell 5.1 writes `>` redirection
+as UTF-16, adds a BOM with `Set-Content -Encoding UTF8`, and does not default the console
+to UTF-8. A BOM on a `.mjs` file breaks the shebang and produces a syntax error that is
+hard to trace.
+
+```powershell
+winget install --id Microsoft.PowerShell --source winget
+```
+
+Then switch your editor's default terminal profile to `pwsh`. `npm run doctor` verifies it.
+
+If you work with an AI agent, read `.cursor/rules/shell.mdc` — it keeps shell usage minimal
+and routes file edits through editing tools. Every rule in it came from an actual incident.
 
 ## Before opening a pull request
 
