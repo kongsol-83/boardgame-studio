@@ -48,10 +48,10 @@ const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 function typeScale(widthMm, scale = 1) {
   const k = (widthMm / 63.5) * scale;
   return {
-    id: clamp(5.5 * k, 4.5, 8),
-    title: clamp(12 * k, 8, 18),
-    stats: clamp(9.5 * k, 7.5, 14),
-    body: clamp(8.5 * k, 7, 12),
+    id: clamp(6 * k, 4.5, 8),
+    title: clamp(13 * k, 8.5, 19),
+    stats: clamp(10.5 * k, 8, 15),
+    body: clamp(9.5 * k, 7.5, 13),
   };
 }
 
