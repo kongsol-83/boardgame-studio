@@ -114,7 +114,8 @@ async function commandSmoke(slug, values) {
 async function commandEstimate(slug, values) {
   const { version, text } = readRuleset(slug);
   const engine = await loadEngine(slug, { rulesetVersion: version });
-  const games = Number(values.games ?? 30);
+  const sim = loadConfig().defaults.sim;
+  const games = Number(values.games ?? sim.games);
   const playerCounts = parsePlayers(values.players ?? '2,3,4');
   const model = values.model ?? process.env.OPENAI_SIM_MODEL ?? DEFAULT_MODEL;
 
@@ -146,7 +147,7 @@ async function commandEstimate(slug, values) {
       ).toFixed(2))
     : null;
 
-  const concurrency = Number(values.concurrency ?? 20);
+  const concurrency = Number(values.concurrency ?? sim.concurrency);
   const minutes = Number(((calls * 1.5) / concurrency / 60).toFixed(1));
 
   output({
@@ -212,15 +213,25 @@ async function commandRun(slug, values) {
     );
   }
 
-  const games = Number(values.games ?? 30);
+  const sim = loadConfig().defaults.sim;
+  const games = Number(values.games ?? sim.games);
   const playerCounts = parsePlayers(values.players ?? '2,3,4');
   const model = values.model ?? process.env.OPENAI_SIM_MODEL ?? DEFAULT_MODEL;
-  const concurrency = Number(values.concurrency ?? 20);
+  const concurrency = Number(values.concurrency ?? sim.concurrency);
 
-  const llm = createLlm({ apiKey, model, concurrency });
+  const llm = createLlm({
+    apiKey,
+    model,
+    concurrency,
+    reasoningEffort: sim.reasoningEffort,
+    maxCompletionTokens: sim.maxCompletionTokens,
+  });
   const system = SYSTEM_TEMPLATE(text);
 
-  log(`${model} 로 ${games} x ${playerCounts.length}판을 돌립니다. 동시 ${concurrency}판.`);
+  log(
+    `${model} 로 ${games} x ${playerCounts.length}판을 돌립니다. 동시 ${concurrency}판. ` +
+      `추론 ${sim.reasoningEffort} · 토큰 예산 ${sim.maxCompletionTokens ?? '무제한'}`,
+  );
 
   const started = Date.now();
   const perPlayers = {};
@@ -252,7 +263,7 @@ async function commandRun(slug, values) {
 
       if (result.finished) {
         try {
-          const review = await llm.askJson({ system, user: REVIEW_PROMPT, maxTokens: 400 });
+          const review = await llm.askJson({ system, user: REVIEW_PROMPT });
           reviews.push({ playerCount, ...review });
         } catch {
           // 소감을 못 받아도 판 자체는 유효하다

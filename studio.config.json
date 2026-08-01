@@ -6,6 +6,12 @@
       "margin_mm": 9,
       "dpi": 300,
       "cut_gap_mm": 0
+    },
+    "sim": {
+      "maxCompletionTokens": null,
+      "reasoningEffort": "low",
+      "concurrency": 20,
+      "games": 30
     }
   }
 }

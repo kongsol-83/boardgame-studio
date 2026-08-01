@@ -40,6 +40,21 @@ const DEFAULTS = {
      * 영역 여유가 얇아진다. 9mm가 포커 3x3을 지키면서 여유도 남는 지점이다.
      */
     print: { sheet: 'A4', margin_mm: 9, dpi: 300, cut_gap_mm: 0 },
+
+    /*
+     * 시뮬레이션. 사람마다 쓰는 모델과 예산이 다르므로 여기서 정한다.
+     *
+     * maxCompletionTokens 가 null 이면 파라미터를 아예 안 보낸다. 모델 자체 상한까지
+     * 쓰게 되어 빈 응답이 나올 일이 없는 대신, 추론 모델에서 출력 토큰이 늘 수 있다.
+     * 숫자로 두면 그 안에서 추론과 본문을 다 써야 하므로, 룰북이 길면 예산을 넉넉히
+     * 잡아야 한다.
+     */
+    sim: {
+      maxCompletionTokens: null,
+      reasoningEffort: 'low',
+      concurrency: 20,
+      games: 30,
+    },
   },
 };
 
@@ -80,6 +95,11 @@ export function loadConfig({ reload = false } = {}) {
 
   // 환경변수가 파일보다 우선한다. CI나 일회성 실행에서 갈아끼우기 위함이다.
   if (process.env.BGS_LANGUAGE) merged.language = process.env.BGS_LANGUAGE.trim();
+  if (process.env.OPENAI_REASONING_EFFORT) merged.defaults.sim.reasoningEffort = process.env.OPENAI_REASONING_EFFORT.trim();
+  if (process.env.OPENAI_MAX_COMPLETION_TOKENS) {
+    const raw = process.env.OPENAI_MAX_COMPLETION_TOKENS.trim();
+    merged.defaults.sim.maxCompletionTokens = raw === '' || raw === 'null' ? null : Number(raw);
+  }
 
   const warnings = [];
   if (warning) warnings.push(warning);

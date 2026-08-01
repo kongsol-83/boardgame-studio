@@ -86,8 +86,26 @@ node tools/sim.mjs run <slug> --games 30 --players 2,3,4
 자동으로 캐시되는데, 프롬프트가 1024토큰을 넘어야 캐시가 걸린다. 룰북이 짧으면 캐시가
 안 걸려 비용이 예상보다 나올 수 있다.
 
-빈 응답이 계속 나오면 추론 모델이 예산을 다 쓴 것이다. `OPENAI_REASONING_EFFORT` 를
-`low` 나 `none` 으로 낮춘다.
+### 설정
+
+모델과 예산은 사람마다 다르므로 `studio.config.json` 의 `defaults.sim` 에서 정한다.
+
+```json
+"sim": {
+  "maxCompletionTokens": null,
+  "reasoningEffort": "low",
+  "concurrency": 20,
+  "games": 30
+}
+```
+
+**`maxCompletionTokens` 가 `null` 이면 파라미터를 아예 안 보낸다.** 모델 자체 상한까지
+쓰므로 빈 응답이 나올 일이 없다. 숫자로 제한하면 추론 모델은 그 예산 안에서 추론을
+먼저 하기 때문에, 룰북이 길면 본문이 빈 채로 돌아온다. 비용을 묶어두고 싶을 때만
+숫자를 넣는다.
+
+한 번만 바꿔보려면 `.env` 의 `OPENAI_MAX_COMPLETION_TOKENS` 와
+`OPENAI_REASONING_EFFORT` 가 파일 설정보다 우선한다.
 
 ### 6. 리포트
 

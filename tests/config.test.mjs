@@ -26,6 +26,42 @@ test('인쇄 기본값이 A4 여백 9mm 다', () => {
   assert.equal(defaults.print.dpi, 300);
 });
 
+test('시뮬레이션 기본값에서 토큰 예산은 무제한이다', () => {
+  delete process.env.BGS_LANGUAGE;
+  delete process.env.OPENAI_MAX_COMPLETION_TOKENS;
+  const { defaults } = loadConfig({ reload: true });
+  // null 이면 max_completion_tokens 를 아예 안 보낸다. 추론이 예산을 다 먹어
+  // 빈 응답이 오는 일이 없어진다.
+  assert.equal(defaults.sim.maxCompletionTokens, null);
+  assert.equal(defaults.sim.reasoningEffort, 'low');
+  assert.equal(defaults.sim.games, 30);
+  assert.equal(defaults.sim.concurrency, 20);
+});
+
+test('환경변수로 토큰 예산과 추론 강도를 덮어쓸 수 있다', () => {
+  process.env.OPENAI_MAX_COMPLETION_TOKENS = '2000';
+  process.env.OPENAI_REASONING_EFFORT = 'none';
+  try {
+    const { defaults } = loadConfig({ reload: true });
+    assert.equal(defaults.sim.maxCompletionTokens, 2000);
+    assert.equal(defaults.sim.reasoningEffort, 'none');
+  } finally {
+    delete process.env.OPENAI_MAX_COMPLETION_TOKENS;
+    delete process.env.OPENAI_REASONING_EFFORT;
+    loadConfig({ reload: true });
+  }
+});
+
+test('토큰 예산을 null 문자열로 주면 무제한으로 본다', () => {
+  process.env.OPENAI_MAX_COMPLETION_TOKENS = 'null';
+  try {
+    assert.equal(loadConfig({ reload: true }).defaults.sim.maxCompletionTokens, null);
+  } finally {
+    delete process.env.OPENAI_MAX_COMPLETION_TOKENS;
+    loadConfig({ reload: true });
+  }
+});
+
 test('환경변수가 파일보다 우선한다', () => {
   process.env.BGS_LANGUAGE = 'en';
   try {

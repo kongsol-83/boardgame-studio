@@ -51,7 +51,9 @@ export function createLlm({
    * 수를 고르는 판단은 깊은 추론이 필요 없으므로 낮게 둔다.
    * 지원하지 않는 모델이면 자동으로 빼고 다시 보낸다.
    */
-  reasoningEffort = process.env.OPENAI_REASONING_EFFORT ?? 'low',
+  reasoningEffort = 'low',
+  /** null 이면 파라미터를 안 보낸다. 모델 자체 상한까지 쓰게 되어 빈 응답이 안 나온다. */
+  maxCompletionTokens = null,
 } = {}) {
   if (!apiKey) throw new LlmError('OpenAI API 키가 필요합니다');
 
@@ -82,10 +84,10 @@ export function createLlm({
    * JSON 객체 하나를 받아온다.
    * @param {{ system: string, user: string, maxTokens?: number }} request
    */
-  async function askJson({ system, user, maxTokens = 1200 }) {
+  async function askJson({ system, user, maxTokens = maxCompletionTokens }) {
     if (fatal) throw fatal;
     await acquire();
-    let budget = maxTokens;
+    let budget = maxTokens ?? null;
     try {
       if (fatal) throw fatal;
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -105,7 +107,7 @@ export function createLlm({
                 { role: 'user', content: user },
               ],
               response_format: { type: 'json_object' },
-              max_completion_tokens: budget,
+              ...(budget === null ? {} : { max_completion_tokens: budget }),
               ...(sendReasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
             }),
           });
@@ -176,20 +178,23 @@ export function createLlm({
          * 예산을 늘려 다시 시도한다. 프롬프트가 길수록 추론이 길어지므로 흔한 일이다.
          */
         if (content.trim() === '' && choice.finish_reason === 'length') {
-          if (attempt === maxRetries) {
-            usage.failures += 1;
-            throw new LlmError(
-              [
-                `모델이 빈 응답을 냈습니다. 추론 토큰 ${reasoningTokens}개가 예산 ${budget}을 다 썼습니다.`,
-                '',
-                `  - OPENAI_REASONING_EFFORT 를 low 나 none 으로 낮추세요 (지금 ${reasoningEffort})`,
-                '  - 또는 룰북을 줄여 프롬프트를 짧게 만드세요',
-              ].join('\n'),
-            );
+          // 예산이 있으면 늘려서 다시. 무제한인데도 걸렸으면 추론을 줄이는 수밖에 없다.
+          if (budget !== null && attempt < maxRetries) {
+            budget = Math.min(budget * 2, 32_000);
+            usage.retries += 1;
+            continue;
           }
-          budget = Math.min(budget * 2, 8000);
-          usage.retries += 1;
-          continue;
+          usage.failures += 1;
+          throw new LlmError(
+            [
+              `모델이 빈 응답을 냈습니다. 추론 토큰 ${reasoningTokens}개가 ${budget === null ? '모델 상한' : `예산 ${budget}`}을 다 썼습니다.`,
+              '',
+              `  - studio.config.json 의 defaults.sim.reasoningEffort 를 낮추세요 (지금 ${reasoningEffort})`,
+              budget === null
+                ? '  - 또는 룰북을 줄여 프롬프트를 짧게 만드세요'
+                : '  - 또는 defaults.sim.maxCompletionTokens 를 null 로 두면 모델 상한까지 씁니다',
+            ].join('\n'),
+          );
         }
 
         try {
