@@ -352,7 +352,7 @@ if (!existsSync(specFile)) {
 }
 
 const spec = JSON.parse(readFileSync(specFile, 'utf8'));
-const print = { ...loadConfig().defaults.print, ...(spec.print ?? {}) };
+const print = { ...loadConfig().print, ...(spec.print ?? {}) };
 const area = printableArea(print);
 
 const targets = (spec.components ?? []).filter(

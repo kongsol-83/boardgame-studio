@@ -9,12 +9,12 @@
 
 import { spawn } from 'node:child_process';
 
+import { loadConfig } from '../lib/config.mjs';
 import { getMeta, setMeta } from './db.mjs';
 
 export const DUMP_URL = 'https://boardgamegeek.com/data_dumps/bg_ranks';
 
 const DAY = 24 * 60 * 60 * 1000;
-const DEFAULT_MAX_AGE_DAYS = 90;
 
 /** 파일명 `boardgames_ranks_2026-08-01.zip` 에서 날짜를 뽑는다. */
 export function dateFromDumpName(filename) {
@@ -30,7 +30,7 @@ export function dateFromDumpName(filename) {
  * @returns {{ days: number, source: string|null, date: string|null, action: string }|null}
  */
 export function checkFreshness(db, { now = Date.now(), maxAgeDays } = {}) {
-  const limit = Number(maxAgeDays ?? process.env.BGG_RANKS_MAX_AGE_DAYS ?? DEFAULT_MAX_AGE_DAYS);
+  const limit = Number(maxAgeDays ?? loadConfig().bgg.ranksMaxAgeDays);
   const iso = getMeta(db, 'ranks_source_date');
   if (!iso) return null;
 

@@ -117,17 +117,30 @@ AI 에이전트로 작업한다면 [.cursor/rules/shell.mdc](.cursor/rules/shell
 PowerShell 7으로도 안 고쳐지는 것들(인라인 스크립트 파싱, stderr가 빨간 에러로 보이는 것,
 유닉스 명령 부재)을 규칙으로 막아둡니다. 전부 실제로 시간을 날린 사례에서 나왔습니다.
 
-### 산출물 언어 바꾸기
+### 설정
 
-이 저장소는 한국어로 만들어졌지만 쓰는 분의 나라는 다를 수 있습니다. 생성되는 설계 문서
-(컨셉, 룰셋, 검토 리포트 등)의 언어는 `studio.config.json` 에서 정합니다.
+**조정할 값은 전부 `studio.config.json` 에 있습니다. `.env` 에는 키만 둡니다.**
+설정 파일은 주석을 쓸 수 있어서(JSONC), 각 값이 왜 그런지가 값 옆에 적혀 있습니다.
 
-```json
-{ "language": "ko" }
+```jsonc
+{
+  "language": "ko",              // 생성되는 설계 문서의 언어
+  "models": {
+    "sim": "gpt-5.6-luna",       // 시뮬레이션에서 수를 두는 플레이어
+    "review": "gpt-5.6-terra",   // 리포트를 쓸 때 피드백을 묶는 모델
+    "image": "gpt-image-2"       // 아트 생성
+  },
+  "print": { "sheet": "A4", "margin_mm": 9, "dpi": 300 },
+  "sim":   { "maxCompletionTokens": null, "games": 30, "concurrency": 20 },
+  "art":   { "quality": "low", "imagesPerMinute": 5 },
+  "bgg":   { "ranksMaxAgeDays": 90, "hydrateTop": 20000 }
+}
 ```
 
-`ko`, `en`, `ja`, `zh-CN`, `de`, `fr`, `es` 를 압니다. 다른 값을 써도 막지 않고 경고만
-합니다. 한 번만 바꿔보려면 환경변수 `BGS_LANGUAGE` 가 파일보다 우선합니다.
+이 저장소는 한국어로 만들어졌지만 쓰는 분의 나라는 다를 수 있습니다. `language` 는
+생성되는 설계 문서(컨셉, 룰셋, 검토 리포트 등)에 적용되고, 저장소 자체의 문서는
+이 설정과 무관하게 한국어를 유지합니다. `ko`, `en`, `ja`, `zh-CN`, `de`, `fr`, `es` 를
+알며 다른 값도 막지 않고 경고만 합니다.
 
 ```bash
 node tools/config.mjs      # 지금 설정 확인
@@ -329,25 +342,35 @@ It covers the problems PowerShell 7 does *not* fix — inline script parsing, na
 being rendered as a red error block, and missing Unix commands. Every rule in it came from
 an actual incident.
 
-### Choosing the output language
+### Configuration
 
-This repository was built in Korean, but you may not be. The language of generated design
-documents (concept, ruleset, review reports, and so on) is set in `studio.config.json`.
+**Everything tunable lives in `studio.config.json`. `.env` holds keys only.** The config
+file accepts comments (JSONC), so the reasoning behind each value sits next to it.
 
-```json
-{ "language": "en" }
+```jsonc
+{
+  "language": "en",              // language of generated design documents
+  "models": {
+    "sim": "gpt-5.6-luna",       // plays moves during simulation
+    "review": "gpt-5.6-terra",   // clusters feedback when writing the report
+    "image": "gpt-image-2"       // art generation
+  },
+  "print": { "sheet": "A4", "margin_mm": 9, "dpi": 300 },
+  "sim":   { "maxCompletionTokens": null, "games": 30, "concurrency": 20 },
+  "art":   { "quality": "low", "imagesPerMinute": 5 },
+  "bgg":   { "ranksMaxAgeDays": 90, "hydrateTop": 20000 }
+}
 ```
 
-Known values are `ko`, `en`, `ja`, `zh-CN`, `de`, `fr`, `es`. Anything else is accepted
-with a warning rather than rejected. For a one-off run, the `BGS_LANGUAGE` environment
-variable takes precedence over the file.
+This repository was built in Korean, but you may not be. `language` applies to generated
+design documents; known values are `ko`, `en`, `ja`, `zh-CN`, `de`, `fr`, `es`, and
+anything else is accepted with a warning rather than rejected. It does **not** change the
+repository's own documentation — `README.md`, `CONTRIBUTING.md`, and the skill prompts stay
+Korean-first.
 
 ```bash
 node tools/config.mjs      # show the resolved config
 ```
-
-Note that this changes what the agents *write*, not the repository's own documentation —
-`README.md`, `CONTRIBUTING.md`, and the skill prompts stay Korean-first.
 
 ### What works without any API key
 

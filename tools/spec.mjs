@@ -84,7 +84,7 @@ function commandValidate(slug) {
 
 function commandResolve(slug) {
   const spec = readSpec(slug);
-  const print = { ...loadConfig().defaults.print, ...(spec.print ?? {}) };
+  const print = { ...loadConfig().print, ...(spec.print ?? {}) };
 
   const components = (spec.components ?? []).map((component) => {
     const [widthMm, heightMm] = component.size_mm ?? [];
@@ -120,7 +120,7 @@ function commandResolve(slug) {
 
 function commandSheet(slug) {
   const spec = readSpec(slug);
-  const print = { ...loadConfig().defaults.print, ...(spec.print ?? {}) };
+  const print = { ...loadConfig().print, ...(spec.print ?? {}) };
   const area = printableArea(print);
 
   let totalSheets = 0;

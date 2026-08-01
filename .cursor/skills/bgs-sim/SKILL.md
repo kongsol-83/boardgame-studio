@@ -102,24 +102,16 @@ node tools/sim.mjs run <slug> --games 30 --players 2,3,4
 
 ### 설정
 
-모델과 예산은 사람마다 다르므로 `studio.config.json` 의 `defaults.sim` 에서 정한다.
+전부 `studio.config.json` 에 있다. 각 값이 왜 그런지는 파일 주석에 적혀 있으니
+바꾸기 전에 읽는다.
 
-```json
-"sim": {
-  "maxCompletionTokens": null,
-  "reasoningEffort": "low",
-  "concurrency": 20,
-  "games": 30
-}
-```
-
-**`maxCompletionTokens` 가 `null` 이면 파라미터를 아예 안 보낸다.** 모델 자체 상한까지
-쓰므로 빈 응답이 나올 일이 없다. 숫자로 제한하면 추론 모델은 그 예산 안에서 추론을
-먼저 하기 때문에, 룰북이 길면 본문이 빈 채로 돌아온다. 비용을 묶어두고 싶을 때만
-숫자를 넣는다.
-
-한 번만 바꿔보려면 `.env` 의 `OPENAI_MAX_COMPLETION_TOKENS` 와
-`OPENAI_REASONING_EFFORT` 가 파일 설정보다 우선한다.
+- `models.sim` — 수를 두는 플레이어. 판당 수십 번 불리므로 여기가 비용을 좌우한다
+- `models.review` — 리포트를 쓸 때 피드백을 묶는 모델. 리포트당 한 번뿐이라
+  플레이 모델보다 좋은 걸 써도 부담이 적다
+- `sim.maxCompletionTokens` — `null` 이면 파라미터를 안 보내 모델 상한까지 쓴다.
+  숫자로 제한하면 추론 모델은 그 안에서 추론을 먼저 하므로 룰북이 길 때 빈 응답이
+  날 수 있다
+- `sim.games`, `sim.concurrency`, `sim.reasoningEffort`, `sim.minSampleForBias`
 
 ### 6. 리포트
 
@@ -129,6 +121,10 @@ node tools/sim.mjs report <slug>
 
 `playtest/sim-YYYY-MM-DD.md` 가 나온다. **이 리포트는 사실만 담는다.** 완주율, 턴 수,
 좌석별 승수, 전략 태그별 승률, 안 쓰인 수, LLM이 헷갈린 지점과 소감.
+
+90판에서 나온 피드백은 표현만 다르고 같은 말이 많다. `models.review` 모델이 이걸 묶어
+빈도순으로 정리하고, **룰북에 정보가 없다는 지적(`rulebook`)과 그 외 애매함(`unclear`)을
+갈라준다.** 묶기만 하고 해석은 하지 않는다. `--raw` 를 주면 묶지 않고 원문을 낸다.
 
 해석과 제안은 다음 단계에서 붙인다. 도구가 해석까지 하면 근거와 의견이 섞여서 나중에
 무엇이 사실이었는지 알 수 없게 된다.

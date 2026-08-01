@@ -2,11 +2,46 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
-import { CONFIG_PATH, KNOWN_LANGUAGES, loadConfig, outputLanguage } from '../tools/lib/config.mjs';
+import { CONFIG_PATH, KNOWN_LANGUAGES, loadConfig, outputLanguage, stripJsonComments } from '../tools/lib/config.mjs';
 
-test('저장소의 studio.config.json 이 유효한 JSON이다', () => {
-  const raw = JSON.parse(readFileSync(CONFIG_PATH, 'utf8'));
+test('저장소의 studio.config.json 이 주석을 걷어내면 유효한 JSON이다', () => {
+  const raw = JSON.parse(stripJsonComments(readFileSync(CONFIG_PATH, 'utf8')));
   assert.equal(typeof raw.language, 'string');
+  assert.equal(typeof raw.models.review, 'string', '리포트 작성 모델이 있어야 한다');
+});
+
+test('한 줄 주석과 블록 주석을 걷어낸다', () => {
+  const source = `{
+    // 한 줄 주석
+    "a": 1, /* 블록 */
+    /* 여러 줄
+       블록 */
+    "b": 2
+  }`;
+  assert.deepEqual(JSON.parse(stripJsonComments(source)), { a: 1, b: 2 });
+});
+
+test('문자열 안의 슬래시는 건드리지 않는다', () => {
+  const source = '{ "url": "https://example.com/a//b", "path": "c:/x/*y*/z" }';
+  const parsed = JSON.parse(stripJsonComments(source));
+  assert.equal(parsed.url, 'https://example.com/a//b');
+  assert.equal(parsed.path, 'c:/x/*y*/z');
+});
+
+test('이스케이프된 따옴표를 문자열 끝으로 보지 않는다', () => {
+  const source = String.raw`{ "a": "그는 \"// 주석\" 이라 썼다", "b": 1 }`;
+  const parsed = JSON.parse(stripJsonComments(source));
+  assert.match(parsed.a, /\/\/ 주석/);
+  assert.equal(parsed.b, 1);
+});
+
+test('주석을 지우다 생긴 후행 쉼표를 정리한다', () => {
+  const source = `{
+    "a": 1,
+    "b": 2
+    // 마지막 항목 뒤 주석
+  }`;
+  assert.deepEqual(JSON.parse(stripJsonComments(source)), { a: 1, b: 2 });
 });
 
 test('기본 언어는 한국어다', () => {
@@ -19,47 +54,40 @@ test('기본 언어는 한국어다', () => {
 
 test('인쇄 기본값이 A4 여백 9mm 다', () => {
   delete process.env.BGS_LANGUAGE;
-  const { defaults } = loadConfig({ reload: true });
-  assert.equal(defaults.print.sheet, 'A4');
+  const config = loadConfig({ reload: true });
+  assert.equal(config.print.sheet, 'A4');
   // 포커 카드 63.5mm 3열이 190.5mm라 여백은 9.75mm 이하여야 한다
-  assert.equal(defaults.print.margin_mm, 9);
-  assert.equal(defaults.print.dpi, 300);
+  assert.equal(config.print.margin_mm, 9);
+  assert.equal(config.print.dpi, 300);
+});
+
+test('역할별 모델이 전부 설정에 있다', () => {
+  const { models } = loadConfig({ reload: true });
+  for (const role of ['sim', 'review', 'image']) {
+    assert.equal(typeof models[role], 'string', `models.${role} 이 있어야 한다`);
+    assert.ok(models[role].length > 0);
+  }
+});
+
+test('BGG 와 아트 설정도 config 에 있다', () => {
+  const config = loadConfig({ reload: true });
+  assert.equal(typeof config.bgg.ranksMaxAgeDays, 'number');
+  assert.equal(typeof config.bgg.hydrateTop, 'number');
+  assert.equal(typeof config.bgg.requestsPerMinute, 'number');
+  assert.equal(typeof config.art.imagesPerMinute, 'number');
+  assert.equal(typeof config.art.quality, 'string');
 });
 
 test('시뮬레이션 기본값에서 토큰 예산은 무제한이다', () => {
   delete process.env.BGS_LANGUAGE;
-  delete process.env.OPENAI_MAX_COMPLETION_TOKENS;
-  const { defaults } = loadConfig({ reload: true });
+  const { sim } = loadConfig({ reload: true });
   // null 이면 max_completion_tokens 를 아예 안 보낸다. 추론이 예산을 다 먹어
   // 빈 응답이 오는 일이 없어진다.
-  assert.equal(defaults.sim.maxCompletionTokens, null);
-  assert.equal(defaults.sim.reasoningEffort, 'low');
-  assert.equal(defaults.sim.games, 30);
-  assert.equal(defaults.sim.concurrency, 20);
-});
-
-test('환경변수로 토큰 예산과 추론 강도를 덮어쓸 수 있다', () => {
-  process.env.OPENAI_MAX_COMPLETION_TOKENS = '2000';
-  process.env.OPENAI_REASONING_EFFORT = 'none';
-  try {
-    const { defaults } = loadConfig({ reload: true });
-    assert.equal(defaults.sim.maxCompletionTokens, 2000);
-    assert.equal(defaults.sim.reasoningEffort, 'none');
-  } finally {
-    delete process.env.OPENAI_MAX_COMPLETION_TOKENS;
-    delete process.env.OPENAI_REASONING_EFFORT;
-    loadConfig({ reload: true });
-  }
-});
-
-test('토큰 예산을 null 문자열로 주면 무제한으로 본다', () => {
-  process.env.OPENAI_MAX_COMPLETION_TOKENS = 'null';
-  try {
-    assert.equal(loadConfig({ reload: true }).defaults.sim.maxCompletionTokens, null);
-  } finally {
-    delete process.env.OPENAI_MAX_COMPLETION_TOKENS;
-    loadConfig({ reload: true });
-  }
+  assert.equal(sim.maxCompletionTokens, null);
+  assert.equal(sim.reasoningEffort, 'low');
+  assert.equal(sim.games, 30);
+  assert.equal(sim.concurrency, 20);
+  assert.equal(sim.minSampleForBias, 20);
 });
 
 test('환경변수가 파일보다 우선한다', () => {

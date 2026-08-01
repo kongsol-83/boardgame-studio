@@ -64,7 +64,8 @@ if (!git) {
 // --- 설정 -------------------------------------------------------------------
 const config = loadConfig();
 ok('산출물 언어', `${config.language} (${config.languageLabel}) · studio.config.json`);
-ok('인쇄 기본값', `${config.defaults.print.sheet} 여백 ${config.defaults.print.margin_mm}mm ${config.defaults.print.dpi}dpi`);
+ok('인쇄 기본값', `${config.print.sheet} 여백 ${config.print.margin_mm}mm ${config.print.dpi}dpi`);
+ok('모델', `플레이 ${config.models.sim} · 리포트 ${config.models.review} · 아트 ${config.models.image}`);
 for (const warning of config.warnings) warn('설정', warning);
 
 // --- 시크릿 -----------------------------------------------------------------
@@ -95,7 +96,7 @@ if (dumps.length === 0) {
 } else {
   const newest = dumps.map((name) => ({ name, when: dateFromDumpName(name)?.getTime() ?? 0 })).sort((a, b) => b.when - a.when)[0];
   const days = newest.when ? Math.floor((Date.now() - newest.when) / 86_400_000) : null;
-  const limit = Number(process.env.BGG_RANKS_MAX_AGE_DAYS ?? 90);
+  const limit = config.bgg.ranksMaxAgeDays;
   const detail = `${newest.name}${days === null ? '' : ` · ${days}일 전`}`;
   if (days !== null && days > limit) warn('랭킹 덤프', `${detail} — ${limit}일이 지났습니다`, '새로 받아 data/ranks/ 에 넣고 seed 를 다시 실행하세요');
   else ok('랭킹 덤프', detail);

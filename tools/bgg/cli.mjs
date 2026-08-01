@@ -20,6 +20,7 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { parseCsv, toNumber } from '../lib/csv.mjs';
+import { loadConfig } from '../lib/config.mjs';
 import { loadEnv, requireEnv, ROOT } from '../lib/env.mjs';
 import { readTextFromZip } from '../lib/unzip.mjs';
 import { createBggClient } from './client.mjs';
@@ -199,7 +200,11 @@ async function commandCrawl(db, values) {
   const maxId = Number(values['max-id'] ?? 450_000);
   const start = values.resume ? Number(getMeta(db, 'crawl_cursor', 1)) : 1;
 
-  const client = createBggClient({ token, onProgress: (message) => log(`  ${message}`) });
+  const client = createBggClient({
+    token,
+    requestsPerMinute: loadConfig().bgg.requestsPerMinute,
+    onProgress: (message) => log(`  ${message}`),
+  });
   const writeGame = createGameWriter(db);
 
   log(`ID ${start}부터 ${maxId}까지 훑습니다. 20개씩, 초당 약 1요청.`);
@@ -238,7 +243,7 @@ async function commandHydrate(values) {
     bail('인덱스가 비어 있습니다.', '먼저 "node tools/bgg/cli.mjs seed" 를 실행하세요.');
   }
 
-  const top = Number(values.top ?? 20_000);
+  const top = Number(values.top ?? loadConfig().bgg.hydrateTop);
   const ids = pendingHydration(db, { limit: top, includeExpansions: Boolean(values.expansions) });
 
   if (ids.length === 0) {
@@ -246,7 +251,11 @@ async function commandHydrate(values) {
     return;
   }
 
-  const client = createBggClient({ token, onProgress: (message) => log(`  ${message}`) });
+  const client = createBggClient({
+    token,
+    requestsPerMinute: loadConfig().bgg.requestsPerMinute,
+    onProgress: (message) => log(`  ${message}`),
+  });
   const writeGame = createGameWriter(db);
 
   const estimateMinutes = Math.ceil((ids.length / client.chunkSize) / 55);
@@ -291,7 +300,11 @@ async function commandSearch(positionals, values) {
   }
 
   const token = requireEnv('BGG_API_TOKEN', '토큰은 https://boardgamegeek.com/applications 에서 발급받습니다.');
-  const client = createBggClient({ token, onProgress: (message) => log(`  ${message}`) });
+  const client = createBggClient({
+    token,
+    requestsPerMinute: loadConfig().bgg.requestsPerMinute,
+    onProgress: (message) => log(`  ${message}`),
+  });
   const items = await client.search(query, { exact: Boolean(values.exact) });
   const results = items.map(normalizeSearchItem).filter(Boolean);
 

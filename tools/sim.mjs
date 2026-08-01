@@ -114,10 +114,11 @@ async function commandSmoke(slug, values) {
 async function commandEstimate(slug, values) {
   const { version, text } = readRuleset(slug);
   const engine = await loadEngine(slug, { rulesetVersion: version });
-  const sim = loadConfig().defaults.sim;
+  const config = loadConfig();
+  const sim = config.sim;
   const games = Number(values.games ?? sim.games);
   const playerCounts = parsePlayers(values.players ?? '2,3,4');
-  const model = values.model ?? process.env.OPENAI_SIM_MODEL ?? DEFAULT_MODEL;
+  const model = values.model ?? config.models.sim ?? DEFAULT_MODEL;
 
   // 결정 수는 랜덤 봇으로 재도 충분히 비슷하다
   let decisions = 0;
@@ -213,10 +214,11 @@ async function commandRun(slug, values) {
     );
   }
 
-  const sim = loadConfig().defaults.sim;
+  const config = loadConfig();
+  const sim = config.sim;
   const games = Number(values.games ?? sim.games);
   const playerCounts = parsePlayers(values.players ?? '2,3,4');
-  const model = values.model ?? process.env.OPENAI_SIM_MODEL ?? DEFAULT_MODEL;
+  const model = values.model ?? config.models.sim ?? DEFAULT_MODEL;
   const concurrency = Number(values.concurrency ?? sim.concurrency);
 
   const llm = createLlm({
@@ -352,7 +354,58 @@ async function commandRun(slug, values) {
 // report
 // ---------------------------------------------------------------------------
 
-function commandReport(slug) {
+/**
+ * 90판에서 나온 소감과 헷갈린 지점을 묶어 정리한다.
+ *
+ * 표현만 다르고 같은 말이 반복되는데, 문자열 비교로는 못 묶는다. 이건 기계적인
+ * 정리 작업이라 모델에 맡기고, 해석과 제안은 검토 단계의 에이전트에게 남긴다.
+ * 리포트당 한 번만 부르므로 플레이 모델보다 좋은 걸 써도 부담이 적다.
+ */
+async function clusterFeedback(data, { model, apiKey }) {
+  const confusions = (data.confusions ?? []).map((entry) => entry.note);
+  const reviews = data.reviews ?? [];
+  if (confusions.length === 0 && reviews.length === 0) return null;
+
+  const llm = createLlm({ apiKey, model, concurrency: 1 });
+  const payload = {
+    focus: data.focus ?? null,
+    confusions,
+    reviews: reviews.map((review) => ({
+      interesting: review.interesting ?? null,
+      boring: review.boring ?? null,
+      confusing: review.confusing ?? null,
+      blocked: review.blocked ?? null,
+    })),
+  };
+
+  try {
+    return await llm.askJson({
+      system: [
+        '보드게임 플레이테스트에서 나온 피드백을 정리하는 일을 합니다.',
+        '',
+        '같은 말이 표현만 다르게 반복되므로 묶어서 빈도순으로 정리하세요.',
+        '**해석하거나 제안하지 마세요.** 무엇을 고쳐야 한다는 말은 쓰지 않습니다.',
+        '그건 다음 단계에서 다른 사람이 합니다. 여기서는 무엇이 관찰됐는지만 정리합니다.',
+        '',
+        '반드시 아래 형식의 JSON 객체 하나만 응답합니다.',
+        '{',
+        '  "themes": [{ "note": "묶은 관찰 한 문장", "count": 몇 번 나왔는지, "kind": "rulebook" 또는 "unclear" }],',
+        '  "boring": ["지루했다는 언급을 묶은 것"],',
+        '  "blocked": ["하고 싶은데 막혔다는 언급을 묶은 것"],',
+        '  "focusAnswer": "focus 질문에 대해 이 피드백이 말해주는 것. focus 가 null 이면 null"',
+        '}',
+        '',
+        'kind 는 룰북에 정보가 없다는 지적이면 rulebook, 그 외 애매함이면 unclear 입니다.',
+      ].join('\n'),
+      user: JSON.stringify(payload),
+    });
+  } catch (error) {
+    log(`피드백 정리를 건너뜁니다: ${error.message.split('\n')[0]}`);
+    return null;
+  }
+}
+
+async function commandReport(slug, values) {
   const dir = logDir(slug);
   const files = existsSync(dir) ? readdirSync(dir).filter((name) => name.endsWith('.json')).sort() : [];
   if (files.length === 0) bail('시뮬레이션 로그가 없습니다.', `node tools/sim.mjs run ${slug} 를 먼저 실행하세요.`);
@@ -448,10 +501,31 @@ function commandReport(slug) {
   if (unused.length > 0) lines.push(`- 한 번도 안 쓰인 수: ${unused.join(', ')}`);
   lines.push('');
 
-  if (data.confusions?.length > 0) {
+  // 모델로 묶은 결과가 있으면 그걸 쓰고, 없으면 원문을 그대로 센다
+  const clustered = values.raw ? null : await clusterFeedback(data, {
+    model: loadConfig().models.review,
+    apiKey: process.env.OPENAI_API_KEY?.trim(),
+  });
+
+  if (clustered?.focusAnswer && data.focus) {
+    lines.push('### 피드백이 말해주는 것');
+    lines.push('');
+    lines.push(clustered.focusAnswer);
+    lines.push('');
+  }
+
+  if (clustered?.themes?.length > 0) {
     lines.push('## 룰북에서 헷갈린 지점');
     lines.push('');
-    lines.push('플레이 도중 LLM이 애매하다고 표시한 것입니다. **룰북의 애매한 자리를 그대로 가리킵니다.**');
+    lines.push('플레이 도중 표시된 것을 묶은 것입니다. **룰북의 애매한 자리를 그대로 가리킵니다.**');
+    lines.push('`rulebook` 은 룰북에 정보가 없다는 지적이고, `unclear` 는 그 외 애매함입니다.');
+    lines.push('');
+    for (const theme of clustered.themes.slice(0, 15)) {
+      lines.push(`- (${theme.count}회 · ${theme.kind}) ${theme.note}`);
+    }
+    lines.push('');
+  } else if (data.confusions?.length > 0) {
+    lines.push('## 룰북에서 헷갈린 지점');
     lines.push('');
     const counted = new Map();
     for (const entry of data.confusions) counted.set(entry.note, (counted.get(entry.note) ?? 0) + 1);
@@ -461,8 +535,16 @@ function commandReport(slug) {
     lines.push('');
   }
 
-  if (data.reviews?.length > 0) {
-    lines.push('## 플레이 소감');
+  for (const [key, label] of [['boring', '지루했던 구간'], ['blocked', '룰이 막은 것']]) {
+    if (!clustered?.[key]?.length) continue;
+    lines.push(`## ${label}`);
+    lines.push('');
+    for (const note of clustered[key].slice(0, 8)) lines.push(`- ${note}`);
+    lines.push('');
+  }
+
+  if (!clustered && data.reviews?.length > 0) {
+    lines.push('## 플레이 소감 (원문)');
     lines.push('');
     for (const key of ['confusing', 'boring', 'blocked', 'interesting']) {
       const label = { confusing: '헷갈린 것', boring: '지루했던 구간', blocked: '룰이 막은 것', interesting: '선택의 의미' }[key];
@@ -498,6 +580,7 @@ function commandReport(slug) {
     source: files[files.length - 1],
     output: path.relative(ROOT, outFile),
     focus: data.focus ?? null,
+    clusteredBy: clustered ? loadConfig().models.review : null,
     flags,
     next: '이 리포트를 각 각도별 에이전트에게 넘겨 해석과 제안을 받으세요.',
   });
@@ -546,8 +629,9 @@ const USAGE = `
       LLM 플레이. 룰북을 읽고 판단하므로 "룰북만 읽고 이해되는가"가 함께 검증된다.
       --focus 에 이번에 확인하려는 것을 적어두면 리포트와 검토가 그걸 먼저 다룬다.
 
-  report <slug>
-      최근 로그를 playtest/sim-YYYY-MM-DD.md 로 정리한다.
+  report <slug> [--raw]
+      최근 로그를 playtest/sim-YYYY-MM-DD.md 로 정리한다. 표현만 다르고 같은 말인
+      피드백을 models.review 모델로 묶는다. --raw 는 묶지 않고 원문을 그대로 낸다.
 
   serve <slug> [--port 4173]
       sim/play.html 정적 서버. 사람이 직접 플레이하거나 리플레이를 본다.
@@ -568,6 +652,7 @@ const { values, positionals } = parseArgs({
     concurrency: { type: 'string' },
     'max-turns': { type: 'string' },
     focus: { type: 'string' },
+    raw: { type: 'boolean' },
     port: { type: 'string' },
     help: { type: 'boolean', short: 'h' },
   },
@@ -584,7 +669,7 @@ try {
   if (command === 'smoke') await commandSmoke(slug, values);
   else if (command === 'estimate') await commandEstimate(slug, values);
   else if (command === 'run') await commandRun(slug, values);
-  else if (command === 'report') commandReport(slug);
+  else if (command === 'report') await commandReport(slug, values);
   else if (command === 'serve') commandServe(slug, values);
   else bail(`알 수 없는 커맨드: ${command}`, USAGE);
 } catch (error) {

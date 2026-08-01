@@ -153,7 +153,7 @@ export function createLlm({
                 ? [
                     `모델 "${model}" 을 찾을 수 없습니다 (404).`,
                     '',
-                    '  - --model 로 다른 모델을 지정하거나 .env 의 OPENAI_SIM_MODEL 을 확인하세요',
+                    '  - --model 로 다른 모델을 지정하거나 studio.config.json 의 models 를 확인하세요',
                     `  - 응답: ${body.slice(0, 300)}`,
                   ].join('\n')
                 : `OpenAI가 ${response.status}를 돌려줬습니다: ${body.slice(0, 300)}`,
@@ -189,10 +189,10 @@ export function createLlm({
             [
               `모델이 빈 응답을 냈습니다. 추론 토큰 ${reasoningTokens}개가 ${budget === null ? '모델 상한' : `예산 ${budget}`}을 다 썼습니다.`,
               '',
-              `  - studio.config.json 의 defaults.sim.reasoningEffort 를 낮추세요 (지금 ${reasoningEffort})`,
+              `  - studio.config.json 의 sim.reasoningEffort 를 낮추세요 (지금 ${reasoningEffort})`,
               budget === null
                 ? '  - 또는 룰북을 줄여 프롬프트를 짧게 만드세요'
-                : '  - 또는 defaults.sim.maxCompletionTokens 를 null 로 두면 모델 상한까지 씁니다',
+                : '  - 또는 sim.maxCompletionTokens 를 null 로 두면 모델 상한까지 씁니다',
             ].join('\n'),
           );
         }
