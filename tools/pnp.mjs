@@ -121,8 +121,16 @@ function drawCard(doc, { x, y, widthMm, heightMm, row, columns, type, artDir }) 
   doc.save();
   doc.rect(x, y, w, h).lineWidth(0.3).strokeColor('#999999').stroke();
 
+  /*
+   * art_file 컬럼이 있으면 그걸 쓰고, 없으면 규칙으로 찾는다.
+   * art.mjs 가 art/<comp-id>/<row-id>.png 로 저장하므로 손으로 채울 이유가 없다.
+   */
   const artColumn = pick(columns, ART_COLUMNS);
-  const artFile = artColumn ? String(row[artColumn] ?? '').trim() : '';
+  const idColumnForArt = pick(columns, ID_COLUMNS);
+  const artFile =
+    (artColumn ? String(row[artColumn] ?? '').trim() : '') ||
+    (idColumnForArt && row[idColumnForArt] ? `${row[idColumnForArt]}.png` : '');
+
   if (artFile) {
     const artPath = path.isAbsolute(artFile) ? artFile : path.join(artDir, artFile);
     if (existsSync(artPath)) {
