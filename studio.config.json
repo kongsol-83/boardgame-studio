@@ -3,7 +3,7 @@
   "defaults": {
     "print": {
       "sheet": "A4",
-      "margin_mm": 10,
+      "margin_mm": 9,
       "dpi": 300,
       "cut_gap_mm": 0
     }

@@ -17,11 +17,12 @@ test('기본 언어는 한국어다', () => {
   assert.deepEqual(config.warnings, []);
 });
 
-test('인쇄 기본값이 A4 여백 10mm 다', () => {
+test('인쇄 기본값이 A4 여백 9mm 다', () => {
   delete process.env.BGS_LANGUAGE;
   const { defaults } = loadConfig({ reload: true });
   assert.equal(defaults.print.sheet, 'A4');
-  assert.equal(defaults.print.margin_mm, 10);
+  // 포커 카드 63.5mm 3열이 190.5mm라 여백은 9.75mm 이하여야 한다
+  assert.equal(defaults.print.margin_mm, 9);
   assert.equal(defaults.print.dpi, 300);
 });
 

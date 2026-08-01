@@ -1,0 +1,181 @@
+{
+  "note": "표준 컴포넌트 규격 모음. spec.json 의 size_mm 에 그대로 넣어 쓴다. 카드 규격은 시중 슬리브가 존재하는 실제 표준이고, 타일·토큰·보드는 관례일 뿐이라 자유롭게 바꿔도 된다.",
+  "note_en": "Standard component sizes, ready to paste into size_mm in spec.json. Card sizes are real standards with commercially available sleeves; tile, token, and board entries are conventions only.",
+  "sources": [
+    "BoardGameGeek Card Sleeve Reference — https://boardgamegeek.com/wiki/page/Card_Sleeve_Reference"
+  ],
+  "presets": [
+    {
+      "id": "card-poker",
+      "type": "card",
+      "label": "Poker / Standard",
+      "label_ko": "포커 / 스탠다드",
+      "size_mm": [63.5, 88],
+      "notes": "MTG와 포켓몬을 포함한 대부분의 TCG와 같은 규격. 슬리브를 가장 구하기 쉽고 인쇄소도 익숙하다. 특별한 이유가 없으면 여기서 시작한다. A4 여백 9mm에 3x3으로 9장 들어가는데, 여백을 10mm로 올리면 3열이 190.5mm라 0.5mm 차이로 무너져서 8장이 된다."
+    },
+    {
+      "id": "card-standard-american",
+      "type": "card",
+      "label": "Standard American",
+      "label_ko": "스탠다드 아메리칸",
+      "size_mm": [57, 89],
+      "notes": "브리지 덱과 사실상 같은 규격(57.15 x 88.9). 포커보다 좁아서 손에 많이 쥐는 게임에 쓴다."
+    },
+    {
+      "id": "card-standard-european",
+      "type": "card",
+      "label": "Standard European",
+      "label_ko": "스탠다드 유로",
+      "size_mm": [59, 92],
+      "notes": "포커보다 좁고 길다. 유로게임에서 흔하다."
+    },
+    {
+      "id": "card-56x87",
+      "type": "card",
+      "label": "56 x 87",
+      "label_ko": "56 x 87",
+      "size_mm": [56, 87],
+      "notes": "구형 유로게임에 자주 보이는 규격."
+    },
+    {
+      "id": "card-japanese",
+      "type": "card",
+      "label": "Japanese",
+      "label_ko": "재패니즈",
+      "size_mm": [59, 86],
+      "notes": "유희왕 등 일본 TCG 규격."
+    },
+    {
+      "id": "card-mini-euro",
+      "type": "card",
+      "label": "Mini European",
+      "label_ko": "미니 유로",
+      "size_mm": [44, 68],
+      "notes": "자원 카드나 액션 카드처럼 장수가 많고 정보가 적은 덱에 쓴다. A4 여백 9mm에 4x4로 16장 들어가서 프로토타입 인쇄 비용이 크게 준다."
+    },
+    {
+      "id": "card-mini-american",
+      "type": "card",
+      "label": "Mini American",
+      "label_ko": "미니 아메리칸",
+      "size_mm": [41, 63],
+      "notes": "미니 유로보다 작다. 미니 유로와 호환되지 않으니 슬리브를 섞지 말 것."
+    },
+    {
+      "id": "card-mini-chimera",
+      "type": "card",
+      "label": "Mini Chimera",
+      "label_ko": "미니 키메라",
+      "size_mm": [43, 65],
+      "notes": "미니 유로 슬리브로 대체 가능한 경우가 많다."
+    },
+    {
+      "id": "card-tarot",
+      "type": "card",
+      "label": "Tarot",
+      "label_ko": "타로",
+      "size_mm": [70, 120],
+      "notes": "딕싯류의 큰 카드. 일러스트를 보여주는 게 목적일 때 쓴다. A4에 4장밖에 안 들어가서 프로토타입 인쇄 장수가 많이 든다."
+    },
+    {
+      "id": "card-65x100",
+      "type": "card",
+      "label": "65 x 100",
+      "label_ko": "65 x 100",
+      "size_mm": [65, 100],
+      "notes": "타로보다 작은 오버사이즈. 플레이어 보드나 레퍼런스 카드에 쓴다."
+    },
+    {
+      "id": "card-square-70",
+      "type": "card",
+      "label": "Square 70",
+      "label_ko": "정사각 70",
+      "size_mm": [70, 70],
+      "notes": "정사각 카드. 방향이 없어야 하는 카드에 쓴다."
+    },
+
+    {
+      "id": "tile-square-50",
+      "type": "tile",
+      "label": "Square tile 50",
+      "label_ko": "정사각 타일 50",
+      "size_mm": [50, 50],
+      "notes": "관례일 뿐 표준이 아니다. A4 여백 9mm에 15장. 카르카손 타일이 45mm 안팎이다."
+    },
+    {
+      "id": "tile-square-40",
+      "type": "tile",
+      "label": "Square tile 40",
+      "label_ko": "정사각 타일 40",
+      "size_mm": [40, 40],
+      "notes": "관례. 타일 수가 많을 때."
+    },
+    {
+      "id": "tile-hex-50",
+      "type": "tile",
+      "label": "Hex tile 50 (bounding box)",
+      "label_ko": "육각 타일 50 (외접 사각)",
+      "size_mm": [50, 43.3],
+      "notes": "한 변 25mm 정육각형의 외접 사각형. 도구는 사각형만 배치하므로 육각은 이 크기로 뽑아 직접 오려야 한다."
+    },
+
+    {
+      "id": "token-25",
+      "type": "token",
+      "label": "Token 25",
+      "label_ko": "토큰 25",
+      "size_mm": [25, 25],
+      "notes": "관례. 집기 편한 최소 크기 근처다."
+    },
+    {
+      "id": "token-20",
+      "type": "token",
+      "label": "Token 20",
+      "label_ko": "토큰 20",
+      "size_mm": [20, 20],
+      "notes": "관례. 더 작으면 손으로 집기 불편하고 인쇄물을 오리기도 어렵다. 이미지 모델 최소 해상도보다 작아서 크게 생성한 뒤 축소된다."
+    },
+
+    {
+      "id": "board-a4",
+      "type": "board",
+      "label": "A4 board",
+      "label_ko": "A4 보드",
+      "size_mm": [210, 297],
+      "notes": "한 장에 안 들어간다. 여백 때문에 A4 용지 자체보다 인쇄 영역이 작아서 4조각으로 나뉜다. 보드를 한 장에 담고 싶으면 190 x 277 이하로 잡는다."
+    },
+    {
+      "id": "board-a4-single",
+      "type": "board",
+      "label": "A4 single sheet",
+      "label_ko": "A4 한 장 보드",
+      "size_mm": [192, 279],
+      "notes": "여백 9mm 기준 A4 한 장에 딱 들어가는 최대 크기. 프로토타입에서 이음새가 없는 게 생각보다 크게 편하다."
+    },
+    {
+      "id": "board-a3",
+      "type": "board",
+      "label": "A3 board",
+      "label_ko": "A3 보드",
+      "size_mm": [297, 420],
+      "notes": "A4 6조각으로 나뉜다."
+    },
+    {
+      "id": "board-420x297",
+      "type": "board",
+      "label": "420 x 297 board",
+      "label_ko": "420 x 297 보드",
+      "size_mm": [420, 297],
+      "notes": "가로형 큰 보드. A4 가로로 깔면 2x2로 4조각, 세로로 깔면 6조각이라 도구가 가로를 고른다. 이 크기는 300dpi가 안 나오고 유효 203dpi가 한계이므로 잔글씨를 넣지 말 것."
+    },
+
+    {
+      "id": "mat-player",
+      "type": "mat",
+      "label": "Player mat",
+      "label_ko": "플레이어 보드",
+      "size_mm": [180, 120],
+      "notes": "관례. A4 한 장에 들어간다."
+    }
+  ]
+}

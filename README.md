@@ -44,9 +44,11 @@ A4 프린트 앤 플레이 PDF까지 뽑는 것을 목표로 합니다.
 420x297mm 보드처럼 큰 건 줄이면서 **유효 DPI를 보고**합니다. 보드가 203dpi가 한계라는 걸
 모르고 잔글씨를 넣으면 인쇄하고 나서 알게 됩니다.
 
-**출력은 A4 고정, 여백 10mm입니다.** 여백을 워드 기본값인 12.7mm로 두면 포커 카드가 장당
-9장에서 8장으로 줄고 가로로 눕혀야 들어갑니다. 10mm가 거의 모든 가정용 프린터의 인쇄 가능
-영역 안이면서 3x3을 지키는 지점입니다.
+**출력은 A4 고정, 여백 9mm입니다.** 이 값에는 근거가 있습니다. 포커 카드의 실제 규격은
+63.5mm라서 3열이면 190.5mm인데, 여백을 10mm로 두면 인쇄 영역이 190mm라 **0.5mm가 모자라
+3열이 무너집니다.** 장당 9장이 8장이 되는데 가장 흔한 규격에서 한 장을 잃는 셈입니다.
+8mm까지 내리면 몇몇 규격에서 조금 더 얻지만 프린터 인쇄 가능 영역의 여유가 얇아집니다.
+9mm가 3x3을 지키면서 여유도 남는 지점입니다.
 
 **시뮬레이션의 목적은 밸런싱이 아닙니다.** 보드게임 밸런스는 소수점을 다투는 영역이 아니고,
 그 정밀도는 시뮬로 얻을 것도 아닙니다. 시뮬은 **테이블에 들고 가기 전에 명백한 사고를 거르는
@@ -217,9 +219,12 @@ time; large ones like a 420x297mm board are scaled *down*, and the resolver **re
 effective DPI** so you learn that the board tops out at 203dpi before you print fine text
 on it, not after.
 
-**Output is always A4 with 10mm margins.** Using Word's default "narrow" 12.7mm drops
-poker cards from 9 to 8 per sheet and forces landscape rotation. 10mm keeps the 3x3 layout
-while staying inside almost every home printer's printable area.
+**Output is always A4 with 9mm margins.** That number is not arbitrary. A poker card is
+actually 63.5mm wide, so three columns need 190.5mm — and a 10mm margin leaves only 190mm
+of printable width. **Half a millimetre costs you an entire column**, dropping the most
+common card size from 9 per sheet to 8. Going down to 8mm gains a little on a few sizes
+but leaves less room for printer hardware margins. 9mm keeps the 3x3 layout with slack to
+spare.
 
 **Simulation is not for balancing.** Board game balance is not a decimal-point discipline,
 and that precision is not something a simulation can give you anyway. Simulation is a
