@@ -100,10 +100,27 @@ async function validateSkills() {
 async function validateAgents() {
   const dir = path.join(ROOT, '.cursor', 'agents');
   const files = await walk(dir, (name) => name.endsWith('.md'));
+
+  // Cursor는 에이전트를 파일명으로만 식별하고 경로는 무시한다. 티어 폴더로 나눠도
+  // 이름이 겹치면 한쪽이 경고 없이 드롭되므로, 폴더가 다르다고 안심할 수 없다.
+  const byBasename = new Map();
+  for (const file of files) {
+    const key = path.basename(file, '.md');
+    if (!byBasename.has(key)) byBasename.set(key, []);
+    byBasename.get(key).push(file);
+  }
+  for (const [name, duplicates] of byBasename) {
+    if (duplicates.length < 2) continue;
+    const where = duplicates.map(rel).join(', ');
+    fail(duplicates[0], `"${name}" 이름이 ${duplicates.length}곳에 있습니다: ${where}. Cursor는 경로를 무시하므로 하나만 로드됩니다`);
+  }
+
   for (const file of files) {
     const { data, hasFrontmatter } = parseFrontmatter(await readFile(file, 'utf8'));
     if (!hasFrontmatter) {
-      fail(file, 'YAML 프론트매터가 없습니다');
+      // Cursor의 재귀 스캔은 `---` 한 쌍만 있으면 무엇이든 에이전트로 잡는다.
+      // 참고 문서를 여기 두면 유령 에이전트가 되므로 .cursor/agents/ 바깥에 둔다.
+      fail(file, 'YAML 프론트매터가 없습니다. 에이전트가 아닌 문서는 .cursor/agents/ 밖에 두세요');
       continue;
     }
     checkName(file, data, path.basename(file, '.md'), '에이전트');

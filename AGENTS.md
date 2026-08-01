@@ -133,11 +133,30 @@ tools/pnp.mjs       PDF 렌더, --check 로 텍스트 오버플로 검사
 tools/validate.mjs  스킬·에이전트·룰 형식 검증 (CI)
 ```
 
+## 서브에이전트 계층
+
+`.cursor/agents/` 아래를 세 단으로 나눕니다. 누가 정하고 누가 실행하는지를 파일 트리에서
+바로 보려는 것입니다.
+
+```
+directors/    방향을 정한다      creative-director, art-director
+leads/        실행을 관리한다     art-lead, component-manager
+specialists/  하나를 깊게 본다    researcher, mechanism-critic, rules-critic,
+                                 balance-analyst, playtester, sim-engineer,
+                                 char-illustrator, scene-illustrator, graphic-designer
+```
+
+**Cursor는 에이전트를 파일명으로만 식별하고 경로는 무시합니다.** 그래서 폴더는 사람이 보는
+용도일 뿐이고, 다른 폴더라도 파일명이 겹치면 한쪽이 경고 없이 드롭됩니다. `npm run validate`
+가 이 충돌을 검사합니다. 같은 이유로 **`.cursor/agents/` 안에 에이전트가 아닌 문서를 두지
+않습니다.** Cursor의 스캔은 `---` 한 쌍만 있으면 무엇이든 에이전트로 잡습니다.
+
 ## 스킬과 에이전트 작성 규칙
 
 - 이름은 **`bgs-` 접두사**로 시작합니다. Cursor가 스킬과 서브에이전트를 모두 슬래시 메뉴에
   올리므로 접두사가 없으면 기본 커맨드와 충돌합니다.
 - 스킬의 `name` 은 **부모 폴더명과 정확히 같아야** 합니다. 다르면 조용히 로드되지 않습니다.
+- 에이전트의 `name` 은 **파일명과 정확히 같아야** 합니다. 티어 폴더명은 이름에 넣지 않습니다.
 - `description` 은 필수이며 무엇을 하는지와 언제 쓰는지를 같이 씁니다.
 - 룰은 `.mdc` 확장자여야 합니다. `.cursor/rules/` 의 `.md` 는 무시됩니다.
 - 실행이 필요 없는 순수 문서 리뷰 에이전트에만 `readonly: true` 를 겁니다.

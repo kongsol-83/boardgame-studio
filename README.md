@@ -187,13 +187,20 @@ node tools/bgg/cli.mjs hydrate       # 상위 20000개 상세 조회, 약 17분
 ## 저장소 구조
 
 ```
-.cursor/agents/     서브에이전트 — 조사, 크리틱, 규격, 시뮬레이션, 아트
+.cursor/agents/
+  directors/        방향을 정한다 — 크리에이티브 디렉터, 아트 디렉터
+  leads/            실행을 관리한다 — 아트 리드, 컴포넌트 매니저
+  specialists/      하나를 깊게 본다 — 조사, 크리틱 3명, 플레이테스터,
+                    시뮬레이션 엔지니어, 일러스트레이터 2명, 그래픽 디자이너
 .cursor/skills/     /bgs-* 워크플로우 스킬
 tools/              Node CLI — bgg, spec, balance, sim, art, pnp
 presets/            표준 컴포넌트 규격 모음
 projects/           작업 중인 게임들. example-* 외에는 gitignore
 data/               로컬 BGG 인덱스와 랭킹 덤프. gitignore
 ```
+
+에이전트 폴더는 사람이 보기 위한 구분입니다. Cursor는 파일명으로 식별하고 경로는 무시하므로
+`/bgs-*` 로 부를 때는 폴더가 보이지 않습니다.
 
 ## 커밋하면 안 되는 것
 
@@ -424,13 +431,20 @@ Once the dump is older than 90 days, research commands warn you and open the dow
 ## Repository layout
 
 ```
-.cursor/agents/     subagents — research, critics, spec, simulation, art
+.cursor/agents/
+  directors/        set direction — creative director, art director
+  leads/            manage execution — art lead, component manager
+  specialists/      look at one thing deeply — research, three critics,
+                    playtester, sim engineer, two illustrators, graphic designer
 .cursor/skills/     the /bgs-* workflow skills
 tools/              Node CLIs — bgg, spec, balance, sim, art, pnp
 presets/            standard component sizes
 projects/           your games. gitignored except example-*
 data/               local BGG index and ranking dumps. gitignored
 ```
+
+The agent folders are for humans reading the tree. Cursor identifies agents by filename and
+ignores the path, so the tiers are invisible when you invoke `/bgs-*`.
 
 ## What must never be committed
 

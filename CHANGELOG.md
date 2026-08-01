@@ -75,6 +75,15 @@
 
 ### Changed
 
+- `.cursor/agents/` 를 `directors/`(2), `leads/`(2), `specialists/`(9) 세 단으로 나눴다.
+  **Cursor는 에이전트를 파일명으로 식별하고 경로는 무시**하므로 이름과 참조는 그대로다.
+  폴더는 파일 트리를 읽기 위한 구분이고, 슬래시 메뉴에는 드러나지 않는다.
+  하위 폴더 스캔은 Cursor가 버그로 규정해 수정 예정이라, 로더가 바뀌면 에이전트가 한꺼번에
+  사라질 수 있다. 증상과 복구 명령을 CONTRIBUTING에 남겼다
+- `tools/validate.mjs` — 티어 폴더가 생기면서 새로 가능해진 사고 두 가지를 검사한다.
+  다른 폴더에 같은 파일명이 있으면 Cursor가 한쪽을 조용히 드롭하는 것, 그리고
+  `.cursor/agents/` 안에 둔 참고 문서가 유령 에이전트로 잡히는 것
+
 - 모든 문서를 한국어 본문 + 하단 영어 구성으로 통일. `README.ko.md` 는 `README.md` 로
   합치고 삭제했다. 공개 저장소라 영어를 함께 두지만 기본은 한국어다
 - `CODE_OF_CONDUCT.md` 에 Contributor Covenant 2.1 공식 한국어 번역을 함께 실었다

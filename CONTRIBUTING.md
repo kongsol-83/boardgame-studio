@@ -56,10 +56,34 @@ BGG XML API 이용약관은 제3자 서비스가 다른 애플리케이션에 �
   올리기 때문에 접두사가 없으면 기본 커맨드와 충돌합니다.
 - 스킬의 `name` 은 **부모 폴더명과 정확히 같아야** 합니다. 다르면 Cursor가 조용히 로드하지
   않아서 왜 안 뜨는지 아무도 모르게 됩니다. `npm run validate` 가 이걸 검사합니다.
+- 에이전트의 `name` 은 **파일명과 정확히 같아야** 합니다. 아래 티어 폴더명은 이름에 넣지
+  않습니다.
 - `description` 은 필수이며 1024자 이내입니다. 무엇을 하는지와 **언제 쓰는지**를 같이 씁니다.
 - 룰 파일은 `.mdc` 확장자여야 합니다. `.cursor/rules/` 의 `.md` 는 무시됩니다.
 - 에이전트가 사용자 결정을 대신하게 만들지 마세요. 먼저 묻고, 선택지를 제시하고,
   사용자가 고르는 흐름을 유지합니다.
+
+에이전트는 `directors/`, `leads/`, `specialists/` 세 폴더로 나뉘어 있습니다. 새로 만들 때는
+그 에이전트가 **방향을 정하는지, 실행을 관리하는지, 하나를 깊게 보는지**로 고르면 됩니다.
+
+#### 에이전트가 전부 안 보인다면
+
+Cursor는 에이전트를 파일명으로 식별하고 경로는 무시합니다. 하위 폴더를 훑는 동작은 지금
+정상 작동하지만, [Cursor 측은 이걸 고쳐야 할 버그로 보고 있습니다](https://forum.cursor.com/t/nested-markdown-files-inside-cursor-agents-are-incorrectly-detected-as-subagents/166296).
+언젠가 로더가 바뀌면 **13개가 한꺼번에 슬래시 메뉴에서 사라질 수 있습니다.**
+
+그렇게 되면 폴더를 없애고 평평하게 되돌리면 됩니다. 이름은 경로와 무관하므로 다른 파일은
+하나도 고칠 필요가 없습니다.
+
+```bash
+git mv .cursor/agents/*/*.md .cursor/agents/
+rmdir .cursor/agents/directors .cursor/agents/leads .cursor/agents/specialists
+npm run validate
+```
+
+같은 이유로 **`.cursor/agents/` 안에 에이전트가 아닌 문서를 두지 마세요.** Cursor의 스캔은
+`---` 한 쌍만 있으면 무엇이든 에이전트로 잡아서, README를 하나 넣으면 슬래시 메뉴에 유령
+항목이 생깁니다. `npm run validate` 가 이것과 이름 충돌을 함께 검사합니다.
 
 ### BGG 메커니즘 한글 설명
 
@@ -205,10 +229,34 @@ A few rules:
   the slash menu, so anything without a prefix collides with built-in commands.
 - A skill's `name` must **exactly match its parent folder name**. If it does not, Cursor
   silently skips loading it and nobody can tell why. `npm run validate` checks this.
+- An agent's `name` must **exactly match its filename**. Do not include the tier folder.
 - `description` is required and capped at 1024 characters. Say what it does *and* when to
   use it.
 - Rule files must use the `.mdc` extension. A `.md` file in `.cursor/rules/` is ignored.
 - Do not let an agent decide for the user. Ask first, present options, let the user pick.
+
+Agents are split across `directors/`, `leads/`, and `specialists/`. When adding one, pick
+the folder by asking whether it **sets direction, manages execution, or looks at one thing
+deeply**.
+
+#### If all the agents disappear
+
+Cursor identifies agents by filename and ignores the path. Scanning subfolders works today,
+but [Cursor considers that a bug to be fixed](https://forum.cursor.com/t/nested-markdown-files-inside-cursor-agents-are-incorrectly-detected-as-subagents/166296).
+Whenever the loader changes, **all 13 may vanish from the slash menu at once.**
+
+If that happens, flatten the folders back. Since names never depended on paths, nothing
+else needs to change.
+
+```bash
+git mv .cursor/agents/*/*.md .cursor/agents/
+rmdir .cursor/agents/directors .cursor/agents/leads .cursor/agents/specialists
+npm run validate
+```
+
+For the same reason, **do not put non-agent documents inside `.cursor/agents/`.** Cursor's
+scan treats any file with a pair of `---` as an agent, so dropping a README there creates a
+phantom entry in the slash menu. `npm run validate` catches this and name collisions.
 
 ### Korean descriptions for BGG mechanisms
 
