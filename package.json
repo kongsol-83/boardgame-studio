@@ -1,0 +1,44 @@
+{
+  "name": "boardgame-studio",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "An AI board game design studio for Cursor. From a one-line idea to BGG reference research, mechanism proposals, a ruleset, LLM playtest simulation, and print-and-play PDFs.",
+  "license": "Apache-2.0",
+  "author": "Sol Kong (https://github.com/kongsol-83)",
+  "homepage": "https://github.com/kongsol-83/boardgame-studio#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kongsol-83/boardgame-studio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kongsol-83/boardgame-studio/issues"
+  },
+  "keywords": [
+    "boardgame",
+    "board-game-design",
+    "tabletop",
+    "print-and-play",
+    "boardgamegeek",
+    "cursor",
+    "ai-agents",
+    "game-design"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "validate": "node tools/validate.mjs",
+    "test": "node tools/validate.mjs && node --test \"tests/**/*.test.mjs\"",
+    "bgg": "node tools/bgg/cli.mjs",
+    "spec": "node tools/spec.mjs",
+    "balance": "node tools/balance.mjs",
+    "sim": "node tools/sim.mjs",
+    "art": "node tools/art.mjs",
+    "pnp": "node tools/pnp.mjs"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^5.10.1",
+    "pdfkit": "^0.19.1"
+  }
+}

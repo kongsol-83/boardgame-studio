@@ -1,0 +1,48 @@
+name: 컴포넌트 규격 프리셋 추가
+description: presets/components.json 에 표준 카드나 타일 규격을 추가
+labels: [preset]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        진입장벽이 가장 낮으면서 모두에게 바로 쓸모 있는 기여입니다.
+        규격은 **mm 단위**로 적어주세요. 픽셀은 도구가 알아서 산출합니다.
+
+  - type: input
+    id: label
+    attributes:
+      label: 규격 이름
+      placeholder: 타로 (Tarot)
+    validations:
+      required: true
+
+  - type: input
+    id: size
+    attributes:
+      label: 크기 (mm)
+      placeholder: 70 x 120
+    validations:
+      required: true
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: 종류
+      options: [card, tile, token, board, mat, 기타]
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: 출처
+      description: 제작사 스펙 시트나 실측 등. 어디서 온 숫자인지 알아야 신뢰할 수 있습니다.
+      placeholder: The Game Crafter 스펙 시트 / 실물 실측
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: 참고
+      description: 슬리브 호환 여부, 흔히 같이 쓰이는 규격 등.

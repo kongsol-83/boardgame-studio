@@ -1,0 +1,26 @@
+Boardgame Studio
+Copyright 2026 Sol Kong (https://github.com/kongsol-83)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+--------------------------------------------------------------------------------
+
+This software queries data from BoardGameGeek (https://boardgamegeek.com)
+through the BGG XML API2, subject to the BGG XML API Terms of Use.
+
+No BoardGameGeek data is redistributed with this software. Each user must
+register their own application and obtain their own access token at
+https://boardgamegeek.com/applications before using the research tooling.
+
+Any locally built index or downloaded ranking dump lives under `data/`, which
+is excluded from version control and must not be committed or redistributed.

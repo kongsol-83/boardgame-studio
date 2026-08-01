@@ -1,0 +1,49 @@
+name: 버그 신고
+description: 도구나 워크플로우가 기대와 다르게 동작할 때
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **API 키나 토큰을 붙여넣지 마세요.** 로그를 붙일 때도 한 번 확인해주세요.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: 무슨 일이 있었나
+      description: 기대한 동작과 실제 동작을 같이 적어주세요.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: 재현 방법
+      placeholder: |
+        1. node tools/bgg/cli.mjs similar --mechanics "Trick-taking"
+        2. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 출력이나 오류 메시지
+      render: text
+
+  - type: input
+    id: node
+    attributes:
+      label: Node 버전
+      description: "`node --version` 결과"
+      placeholder: v24.13.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: 운영체제
+      options: [Windows, macOS, Linux]
+    validations:
+      required: true

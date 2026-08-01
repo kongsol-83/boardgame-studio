@@ -1,0 +1,60 @@
+name: 스킬 또는 에이전트 제안
+description: 새 /bgs-* 스킬이나 서브에이전트, 혹은 기존 프롬프트 개선
+labels: [skill]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        프롬프트 제안은 **구체적인 사례**와 함께 올 때 가장 쓸모 있습니다.
+        "이 크리틱이 이런 걸 놓치더라" 같은 실제 경험을 적어주세요.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 무엇에 대한 제안인가
+      options:
+        - 새 스킬
+        - 새 서브에이전트
+        - 기존 스킬 개선
+        - 기존 에이전트 개선
+    validations:
+      required: true
+
+  - type: input
+    id: name
+    attributes:
+      label: 이름
+      description: "`bgs-` 접두사로 시작해야 합니다. 기존 것이면 그 이름을 적어주세요."
+      placeholder: bgs-onboarding
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 어떤 문제를 겪었나
+      description: 지금 워크플로우로 안 되는 것, 혹은 결과가 아쉬웠던 지점.
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: 실제 사례
+      description: 어떤 입력에 어떤 결과가 나왔고, 대신 무엇이 나왔어야 하는지.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 제안하는 동작
+      description: 무엇을 묻고, 무엇을 산출하고, 어느 파일에 쓰는지.
+
+  - type: checkboxes
+    id: protocol
+    attributes:
+      label: 확인
+      options:
+        - label: 이 제안은 에이전트가 사용자 결정을 대신하지 않습니다 (먼저 묻고, 선택지를 주고, 사용자가 고름)
+          required: true

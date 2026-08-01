@@ -1,0 +1,181 @@
+#!/usr/bin/env node
+/**
+ * 스킬, 서브에이전트, 룰의 형식을 검증한다.
+ *
+ * 이게 없으면 형식이 어긋난 스킬을 Cursor가 조용히 로드하지 않아서
+ * 왜 슬래시 메뉴에 안 뜨는지 아무도 모르게 된다. CI에서 매번 돌린다.
+ *
+ *   node tools/validate.mjs
+ */
+
+import { execFile } from 'node:child_process';
+import { readdir, readFile } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
+
+import { parseFrontmatter } from './lib/frontmatter.mjs';
+
+const execFileAsync = promisify(execFile);
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+const PREFIX = 'bgs-';
+const MAX_DESCRIPTION = 1024;
+const SKIP_DIRS = new Set(['node_modules', '.git', 'data', 'projects']);
+
+const problems = [];
+const notes = [];
+
+const rel = (absolute) => path.relative(ROOT, absolute).replaceAll(path.sep, '/');
+const fail = (file, message) => problems.push({ file: rel(file), message });
+const note = (file, message) => notes.push({ file: rel(file), message });
+
+/** SKIP_DIRS 를 건너뛰며 재귀적으로 파일을 모은다. */
+async function walk(dir, filter) {
+  let entries;
+  try {
+    entries = await readdir(dir, { withFileTypes: true });
+  } catch (error) {
+    if (error.code === 'ENOENT') return [];
+    throw error;
+  }
+
+  const found = [];
+  for (const entry of entries) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (SKIP_DIRS.has(entry.name)) continue;
+      found.push(...(await walk(full, filter)));
+    } else if (filter(entry.name)) {
+      found.push(full);
+    }
+  }
+  return found;
+}
+
+function checkName(file, data, expected, kind) {
+  if (!data.name) {
+    fail(file, `${kind}에 name 필드가 없습니다`);
+  } else if (data.name !== expected) {
+    fail(file, `name이 "${data.name}"인데 "${expected}"여야 합니다. 다르면 Cursor가 로드하지 않습니다`);
+  }
+
+  const actual = typeof data.name === 'string' ? data.name : expected;
+  if (!actual.startsWith(PREFIX)) {
+    fail(file, `이름은 "${PREFIX}" 접두사로 시작해야 합니다. 없으면 기본 커맨드와 충돌합니다`);
+  }
+  if (!/^[a-z0-9-]+$/.test(actual)) {
+    fail(file, `이름에 소문자, 숫자, 하이픈만 쓸 수 있습니다: "${actual}"`);
+  }
+}
+
+function checkDescription(file, data, kind) {
+  const description = data.description;
+  if (typeof description !== 'string' || description.trim() === '') {
+    fail(file, `${kind}에 description이 없습니다. 이걸로 언제 쓸지 판단합니다`);
+    return;
+  }
+  if (description.length > MAX_DESCRIPTION) {
+    fail(file, `description이 ${description.length}자입니다. ${MAX_DESCRIPTION}자 이하여야 합니다`);
+  }
+  if (description.length < 20) {
+    note(file, 'description이 너무 짧습니다. 무엇을 하는지와 언제 쓰는지를 같이 쓰세요');
+  }
+}
+
+async function validateSkills() {
+  const files = await walk(path.join(ROOT, '.cursor', 'skills'), (name) => name === 'SKILL.md');
+  for (const file of files) {
+    const { data, hasFrontmatter } = parseFrontmatter(await readFile(file, 'utf8'));
+    if (!hasFrontmatter) {
+      fail(file, 'YAML 프론트매터가 없습니다');
+      continue;
+    }
+    checkName(file, data, path.basename(path.dirname(file)), '스킬');
+    checkDescription(file, data, '스킬');
+  }
+  return files.length;
+}
+
+async function validateAgents() {
+  const dir = path.join(ROOT, '.cursor', 'agents');
+  const files = await walk(dir, (name) => name.endsWith('.md'));
+  for (const file of files) {
+    const { data, hasFrontmatter } = parseFrontmatter(await readFile(file, 'utf8'));
+    if (!hasFrontmatter) {
+      fail(file, 'YAML 프론트매터가 없습니다');
+      continue;
+    }
+    checkName(file, data, path.basename(file, '.md'), '에이전트');
+    checkDescription(file, data, '에이전트');
+
+    if ('readonly' in data && typeof data.readonly !== 'boolean') {
+      fail(file, `readonly는 true 또는 false여야 합니다: "${data.readonly}"`);
+    }
+  }
+  return files.length;
+}
+
+async function validateRules() {
+  const dir = path.join(ROOT, '.cursor', 'rules');
+  const files = await walk(dir, (name) => name.endsWith('.md') || name.endsWith('.mdc'));
+  let count = 0;
+  for (const file of files) {
+    if (file.endsWith('.md')) {
+      fail(file, '룰은 .mdc 확장자여야 합니다. .cursor/rules/ 의 .md 는 무시됩니다');
+      continue;
+    }
+    count += 1;
+    const { hasFrontmatter, data } = parseFrontmatter(await readFile(file, 'utf8'));
+    if (!hasFrontmatter) {
+      fail(file, 'YAML 프론트매터가 없습니다');
+      continue;
+    }
+    if (!data.description && !data.globs && data.alwaysApply !== true) {
+      fail(file, 'description, globs, alwaysApply 중 하나는 있어야 룰이 적용됩니다');
+    }
+  }
+  return count;
+}
+
+async function validateSyntax() {
+  const files = await walk(ROOT, (name) => name.endsWith('.mjs') || name.endsWith('.js'));
+  const results = await Promise.all(
+    files.map(async (file) => {
+      try {
+        await execFileAsync(process.execPath, ['--check', file]);
+        return null;
+      } catch (error) {
+        return { file, message: String(error.stderr || error.message).trim().split('\n')[0] };
+      }
+    }),
+  );
+  for (const result of results) {
+    if (result) fail(result.file, `문법 오류: ${result.message}`);
+  }
+  return files.length;
+}
+
+const [skills, agents, rules, scripts] = [
+  await validateSkills(),
+  await validateAgents(),
+  await validateRules(),
+  await validateSyntax(),
+];
+
+console.log(`검사 대상 — 스킬 ${skills}, 에이전트 ${agents}, 룰 ${rules}, 스크립트 ${scripts}`);
+
+for (const { file, message } of notes) {
+  console.log(`  참고  ${file}\n        ${message}`);
+}
+
+if (problems.length === 0) {
+  console.log('통과');
+  process.exit(0);
+}
+
+console.error(`\n${problems.length}건의 문제:`);
+for (const { file, message } of problems) {
+  console.error(`  오류  ${file}\n        ${message}`);
+}
+process.exit(1);

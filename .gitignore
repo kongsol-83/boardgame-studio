@@ -1,0 +1,30 @@
+# 시크릿
+.env
+.env.local
+.env.*.local
+
+# BGG 데이터. XML API 이용약관상 재배포 금지이며 전부 재생성 가능
+data/
+
+# 본인 게임 프로젝트는 공개하지 않는다. example만 추적
+projects/*
+!projects/example-*/
+
+# 예제 프로젝트의 생성물은 커밋하지 않는다 (CI가 만들어서 검증)
+projects/example-*/pnp/
+projects/example-*/art/anchors/
+projects/example-*/art/*/
+projects/example-*/sim/logs/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.npm/
+
+# OS / 에디터
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~

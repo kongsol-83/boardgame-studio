@@ -1,0 +1,18 @@
+# 저장소 안에서는 LF로 통일한다.
+# CI가 ubuntu와 windows 두 러너에서 도는데, 줄바꿈이 갈리면
+# 같은 파일이 OS마다 다르게 읽히고 diff도 지저분해진다.
+* text=auto eol=lf
+
+# 바이너리는 건드리지 않는다.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.webp  binary
+*.pdf   binary
+*.zip   binary
+*.sqlite binary
+
+# GitHub 언어 통계에서 제외
+LICENSE      linguist-generated
+package-lock.json linguist-generated

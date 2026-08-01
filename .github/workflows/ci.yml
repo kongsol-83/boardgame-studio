@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # 실수로 커밋되면 되돌릴 수 없는 것들을 막는다.
+  # .gitignore 는 `git add -f` 한 번이면 뚫리지만 이 잡은 안 뚫린다.
+  guard:
+    name: 커밋 금지 항목 검사
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: BGG 데이터가 추적되고 있지 않은지 확인
+        run: |
+          # XML API 이용약관상 BGG 데이터는 재배포할 수 없다.
+          leaked=$(git ls-files | grep -E '^data/|\.sqlite3?$|\.db$|boardgames_ranks_.*\.zip$' || true)
+          if [ -n "$leaked" ]; then
+            echo "::error::BGG 데이터는 커밋할 수 없습니다. data/ 는 gitignore 대상입니다."
+            echo "$leaked"
+            exit 1
+          fi
+          echo "BGG 데이터 없음"
+
+      - name: 본인 게임 프로젝트가 추적되고 있지 않은지 확인
+        run: |
+          # 공모전 출품작이 공개되면 출품 자격까지 걸릴 수 있다. example-* 만 허용.
+          leaked=$(git ls-files 'projects/*' | grep -v '^projects/example-' || true)
+          if [ -n "$leaked" ]; then
+            echo "::error::projects/ 아래는 example-* 만 커밋할 수 있습니다."
+            echo "$leaked"
+            exit 1
+          fi
+          echo "example 외 프로젝트 없음"
+
+      - name: 시크릿 파일이 추적되고 있지 않은지 확인
+        run: |
+          leaked=$(git ls-files | grep -E '(^|/)\.env$|(^|/)\.env\.[^/]*$' | grep -v '\.env\.example$' || true)
+          if [ -n "$leaked" ]; then
+            echo "::error::.env 파일은 커밋할 수 없습니다. .env.example 만 추적합니다."
+            echo "$leaked"
+            exit 1
+          fi
+          echo "시크릿 파일 없음"
+
+  test:
+    name: 검증과 테스트 (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows에서 개발하지만 경로 처리가 리눅스에서도 맞아야 한다.
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          cache: npm
+
+      - run: npm ci
+
+      # 스킬 name이 폴더명과 다르면 Cursor가 조용히 로드하지 않는다.
+      # 문법 검사와 단위 테스트도 여기 포함된다.
+      - name: npm test
+        run: npm test
