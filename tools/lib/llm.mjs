@@ -123,8 +123,14 @@ export function createLlm({
         if (response.status === 429 || response.status >= 500) {
           if (attempt === maxRetries) { usage.failures += 1; throw new LlmError(`${response.status} 응답이 계속됩니다`, { status: response.status }); }
           usage.retries += 1;
+          /*
+           * 헤더가 없으면 지수 백오프로 간다. `Number(null)` 이 0이고 그건 유한한
+           * 값이라, 있는지를 isFinite 로 판정하면 헤더가 없을 때 대기가 0이 되어
+           * 백오프가 통째로 사라진다. 429가 연달아 나는 상황에서 곧바로 다시
+           * 때리므로 레이트 리밋이 더 오래 풀리지 않는다.
+           */
           const retryAfter = Number(response.headers.get('retry-after'));
-          await sleep(Number.isFinite(retryAfter) ? retryAfter * 1000 : Math.min(2000 * 2 ** (attempt - 1), 30_000));
+          await sleep(retryAfter > 0 ? retryAfter * 1000 : Math.min(2000 * 2 ** (attempt - 1), 30_000));
           continue;
         }
 
