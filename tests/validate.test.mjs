@@ -217,12 +217,16 @@ test('문법 오류를 잡는다', async (t) => {
 });
 
 test('건너뛰는 폴더는 검사하지 않는다', async (t) => {
-  // node_modules 를 검사하면 남의 코드에서 문제가 쏟아진다. projects 와 data 는
-  // 커밋되지 않는 작업물이라 형식을 강제하지 않는다
+  /*
+   * node_modules 를 검사하면 남의 코드에서 문제가 쏟아진다. projects 와 data 는
+   * 커밋되지 않는 작업물이고, scratch 는 한 번 쓰고 버리는 검증 코드 자리다.
+   * 반쯤 쓴 스크립트를 남겨뒀다고 npm test 가 깨지면 안 된다.
+   */
   const root = await makeTree({
     'node_modules/pkg/broken.mjs': 'const a = (((;\n',
-    'projects/scratch/broken.mjs': 'const a = (((;\n',
+    'projects/my-game/broken.mjs': 'const a = (((;\n',
     'data/broken.mjs': 'const a = (((;\n',
+    'scratch/probe.mjs': 'const a = (((;\n',
     'tools/ok.mjs': 'export const a = 1;\n',
   });
   t.after(() => rm(root, { recursive: true, force: true }));

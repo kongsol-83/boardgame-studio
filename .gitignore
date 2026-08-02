@@ -10,6 +10,9 @@ data/
 projects/*
 !projects/example-*/
 
+# 한 번 쓰고 버릴 검증 코드. projects/ 아래에 두면 게임 프로젝트인 척하는 폴더가 된다
+scratch/
+
 # 예제 프로젝트의 생성물은 커밋하지 않는다 (CI가 만들어서 검증)
 projects/example-*/pnp/
 projects/example-*/art/anchors/

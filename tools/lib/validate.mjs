@@ -21,7 +21,14 @@ const execFileAsync = promisify(execFile);
 export const PREFIX = 'bgs-';
 export const MAX_DESCRIPTION = 1024;
 const MIN_DESCRIPTION = 20;
-const SKIP_DIRS = new Set(['node_modules', '.git', 'data', 'projects']);
+/**
+ * 검사하지 않는 폴더.
+ *
+ * `node_modules` 는 남의 코드고, `data` 와 `projects` 는 커밋되지 않는 작업물이다.
+ * `scratch` 는 한 번 쓰고 버리는 검증 코드 자리라서, 반쯤 쓴 스크립트 때문에
+ * `npm test` 가 깨지면 안 된다.
+ */
+const SKIP_DIRS = new Set(['node_modules', '.git', 'data', 'projects', 'scratch']);
 
 /** SKIP_DIRS 를 건너뛰며 재귀적으로 파일을 모은다. */
 export async function walk(dir, filter) {
