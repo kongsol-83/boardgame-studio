@@ -21,6 +21,7 @@ import { parseArgs } from 'node:util';
 
 import { parseCsvToArray, toNumber } from './lib/csv.mjs';
 import { loadConfig } from './lib/config.mjs';
+import { localIso } from './lib/datetime.mjs';
 import { loadEnv, requireEnv, ROOT } from './lib/env.mjs';
 import { createImageClient, estimateImageCost } from './lib/image.mjs';
 import { resolvePixels } from './lib/spec.mjs';
@@ -193,7 +194,7 @@ function commandApprove(slug, values) {
   if (!chosen) bail(`candidate-${index}.png 이 없습니다.`, `있는 것: ${candidates.join(', ')}`);
 
   writeFileSync(path.join(dir, APPROVED), readFileSync(path.join(dir, chosen)));
-  writeFileSync(path.join(dir, 'approved.txt'), `${chosen}\n승인 ${new Date().toISOString()}\n`);
+  writeFileSync(path.join(dir, 'approved.txt'), `${chosen}\n승인 ${localIso()}\n`);
 
   output({
     command: 'art approve',

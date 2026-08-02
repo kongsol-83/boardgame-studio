@@ -18,6 +18,7 @@ import path from 'node:path';
 import { parseArgs } from 'node:util';
 
 import { loadConfig } from './lib/config.mjs';
+import { fileStamp, localIso } from './lib/datetime.mjs';
 import { loadEnv, requireEnv, ROOT } from './lib/env.mjs';
 import { createLlm, DEFAULT_MODEL, estimateCost, PRICING } from './lib/llm.mjs';
 import { aggregate, loadEngine, makeRng, playGame, randomChooser } from './lib/sim.mjs';
@@ -307,13 +308,12 @@ async function commandRun(slug, values) {
 
   // 로그 저장
   mkdirSync(logDir(slug), { recursive: true });
-  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const logFile = path.join(logDir(slug), `${stamp}.json`);
+  const logFile = path.join(logDir(slug), `${fileStamp()}.json`);
   writeFileSync(
     logFile,
     JSON.stringify(
       {
-        at: new Date().toISOString(),
+        at: localIso(),
         model,
         rulesetVersion: version,
         focus,

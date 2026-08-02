@@ -21,6 +21,7 @@ import PDFDocument from 'pdfkit';
 
 import { parseCsvToArray, toNumber } from './lib/csv.mjs';
 import { loadConfig } from './lib/config.mjs';
+import { localDate } from './lib/datetime.mjs';
 import { ROOT } from './lib/env.mjs';
 import { fontHelp, needsUnicodeFont, resolveFont } from './lib/font.mjs';
 import { printableArea, SHEETS } from './lib/spec.mjs';
@@ -430,8 +431,7 @@ if (values.check) {
 // --- 렌더 -------------------------------------------------------------------
 const outDir = path.join(ROOT, 'projects', slug, 'pnp');
 mkdirSync(outDir, { recursive: true });
-const stamp = new Date().toISOString().slice(0, 10);
-const outFile = path.join(outDir, `${slug}-${stamp}.pdf`);
+const outFile = path.join(outDir, `${slug}-${localDate()}.pdf`);
 
 const doc = new PDFDocument({ autoFirstPage: false, margin: 0 });
 const stream = (await import('node:fs')).createWriteStream(outFile);

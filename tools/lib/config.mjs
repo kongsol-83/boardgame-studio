@@ -32,6 +32,7 @@ export const KNOWN_LANGUAGES = {
  */
 const DEFAULTS = {
   language: 'ko',
+  timezone: 'auto',
   models: { sim: 'gpt-5.4-nano', review: 'gpt-5.4-mini', image: 'gpt-image-2' },
   print: { sheet: 'A4', margin_mm: 9, dpi: 300, cut_gap_mm: 0 },
   sim: { maxCompletionTokens: null, reasoningEffort: 'low', concurrency: 20, games: 30, minSampleForBias: 20 },

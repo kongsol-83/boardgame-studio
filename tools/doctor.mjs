@@ -14,6 +14,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 
 import { loadConfig } from './lib/config.mjs';
+import { localDate, resolveTimezone } from './lib/datetime.mjs';
 import { loadEnv, ROOT } from './lib/env.mjs';
 import { dateFromDumpName } from './bgg/freshness.mjs';
 
@@ -64,6 +65,15 @@ if (!git) {
 // --- 설정 -------------------------------------------------------------------
 const config = loadConfig();
 ok('산출물 언어', `${config.language} (${config.languageLabel}) · studio.config.json`);
+
+// 날짜가 하루씩 어긋나 보일 때 가장 먼저 확인할 자리다
+const zone = resolveTimezone(config);
+const SOURCE_LABEL = { config: '설정에 지정', system: '이 기계', language: '언어로 추정', fallback: '추정 실패' };
+const zoneDetail = `${zone.timezone} (${SOURCE_LABEL[zone.source]}) · 오늘은 ${localDate({ timezone: zone.timezone })}`;
+if (zone.warning) warn('시간대', zone.warning, 'studio.config.json 의 timezone 에 IANA 이름을 쓰거나 "auto" 로 두세요');
+else if (zone.source === 'language') warn('시간대', `${zoneDetail} — 기계가 시간대를 알려주지 않아 언어로 추정했습니다`, '정확히 하려면 studio.config.json 의 timezone 에 IANA 이름을 적으세요');
+else ok('시간대', zoneDetail);
+
 ok('인쇄 기본값', `${config.print.sheet} 여백 ${config.print.margin_mm}mm ${config.print.dpi}dpi`);
 ok('모델', `플레이 ${config.models.sim} · 리포트 ${config.models.review} · 아트 ${config.models.image}`);
 for (const warning of config.warnings) warn('설정', warning);

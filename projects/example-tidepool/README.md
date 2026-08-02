@@ -72,7 +72,7 @@ node tools/art.mjs anchor example-tidepool --set nature --subject "..."
 
 ## 크리틱과 플레이테스터는 다른 걸 잡습니다
 
-이 예제로 둘 다 돌려본 결과입니다. `playtest/sim-2026-08-01.md` 에 실제 리포트가 들어
+이 예제로 둘 다 돌려본 결과입니다. `playtest/sim-2026-08-02.md` 에 실제 리포트가 들어
 있습니다. 30판에 0.34달러, 4분 걸렸습니다.
 
 | 룰북의 빈칸 | 크리틱의 심각도 | 플레이 중 걸린 횟수 |

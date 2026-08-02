@@ -125,6 +125,7 @@ PowerShell 7으로도 안 고쳐지는 것들(인라인 스크립트 파싱, std
 ```jsonc
 {
   "language": "ko",              // 생성되는 설계 문서의 언어
+  "timezone": "auto",            // 산출물 날짜의 기준. 기본은 이 기계의 시간대
   "models": {
     "sim": "gpt-5.6-luna",       // 시뮬레이션에서 수를 두는 플레이어
     "review": "gpt-5.6-terra",   // 리포트를 쓸 때 피드백을 묶는 모델
@@ -375,6 +376,7 @@ file accepts comments (JSONC), so the reasoning behind each value sits next to i
 ```jsonc
 {
   "language": "en",              // language of generated design documents
+  "timezone": "auto",            // dates on outputs. defaults to this machine's zone
   "models": {
     "sim": "gpt-5.6-luna",       // plays moves during simulation
     "review": "gpt-5.6-terra",   // clusters feedback when writing the report
