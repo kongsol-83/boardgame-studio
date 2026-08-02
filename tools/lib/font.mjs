@@ -76,6 +76,46 @@ export function resolveFont({ configured, requireCjk = false } = {}) {
   return null;
 }
 
+/**
+ * 굵은 짝 폰트의 후보 경로들. 같은 폴더만 본다.
+ *
+ * pdfkit은 폰트 파일 하나에 한 굵기만 담긴 것으로 다루므로, 굵게 쓰려면 별도 파일을
+ * 등록해야 한다. 파일명 관례가 플랫폼마다 다르다. Windows는 `malgun.ttf` 옆에
+ * `malgunbd.ttf` 를 두고, 나눔과 Noto는 `-Bold` 나 `Bold` 를 붙인다.
+ *
+ * 경로만 만들고 존재 여부는 보지 않는다. 그래야 fs 없이 테스트된다.
+ *
+ * @param {string} fontPath
+ * @returns {string[]}
+ */
+export function boldCandidates(fontPath) {
+  const dir = path.dirname(fontPath);
+  const ext = path.extname(fontPath);
+  const base = path.basename(fontPath, ext);
+
+  // 이미 굵은 폰트를 본문에 쓰고 있으면 더 굵힐 것이 없다
+  if (/bold|bd$/i.test(base)) return [];
+
+  const names = [];
+  if (/regular/i.test(base)) names.push(base.replace(/regular/i, 'Bold'));
+  names.push(`${base}bd`, `${base}-Bold`, `${base}Bold`, `${base}_Bold`);
+
+  return [...new Set(names)].map((name) => path.join(dir, `${name}${ext}`));
+}
+
+/**
+ * 굵은 짝 폰트를 찾는다. 없으면 null 이고, 그때는 렌더러가 획을 덧그려 굵게 만든다.
+ *
+ * @param {string} fontPath
+ * @returns {{ path: string, label: string }|null}
+ */
+export function resolveBoldFont(fontPath) {
+  for (const candidate of boldCandidates(fontPath)) {
+    if (existsSync(candidate)) return { path: candidate, label: path.basename(candidate) };
+  }
+  return null;
+}
+
 /** 폰트를 못 찾았을 때 사람이 읽을 안내. */
 export function fontHelp(requireCjk) {
   const install = {

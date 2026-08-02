@@ -396,6 +396,25 @@ Cursor에서 크리틱을 부르세요.
 한 번에 열 군데를 고치면 다음 판에서 **무엇이 효과가 있었는지 알 수 없습니다.** 이건
 신중함이 아니라 인과를 지키는 문제입니다.
 
+고쳤으면 남에게 읽힐 형태로 뽑습니다.
+
+```bash
+node tools/rulebook.mjs example-tidepool --check
+node tools/rulebook.mjs example-tidepool --toc
+```
+
+```json
+{ "pages": 3, "toc": { "pages": 1 }, "version": "버전 0.2 · 2026-08-02", "warnings": [] }
+```
+
+**꼬리말에 방금 올린 버전이 박힙니다.** 여러 번 뽑아놓고 어느 종이가 최신인지 헷갈리는
+일이 실제로 생기고, 플레이테스트 기록의 「룰셋 v0.2」와 손에 든 종이를 잇는 게 그
+한 줄입니다.
+
+`--check` 는 PDF를 만들지 않고 페이지 수와 절 목록만 냅니다. 표의 열이 좁아지거나 코드
+블록이 폭을 넘으면 여기서 경고와 함께 종료 코드 1이 나옵니다. 인쇄한 뒤에 알면 다시
+뽑아야 합니다.
+
 되돌리세요.
 
 ```bash
@@ -781,7 +800,28 @@ and add one line to the change log at the bottom in this shape:
 the third revision nobody knows why the ruleset looks the way it does.
 
 Change ten things at once and you cannot tell **which one helped** in the next session.
-That is not caution; it is preserving causality. Then revert:
+That is not caution; it is preserving causality.
+
+With that fixed, produce something someone else can read:
+
+```bash
+node tools/rulebook.mjs example-tidepool --check
+node tools/rulebook.mjs example-tidepool --toc
+```
+
+```json
+{ "pages": 3, "toc": { "pages": 1 }, "version": "버전 0.2 · 2026-08-02", "warnings": [] }
+```
+
+**The version you just bumped is stamped into the footer.** Print a rulebook a few times
+and you will lose track of which sheet is current; that one line is what connects
+"ruleset v0.2" in a playtest record to the paper in your hand.
+
+`--check` renders nothing and reports the page count and section list. If a table column
+gets too narrow or a code block runs past the text width, it warns and exits 1. Finding
+that out after printing means printing again.
+
+Then revert:
 
 ```bash
 git checkout -- projects/example-tidepool

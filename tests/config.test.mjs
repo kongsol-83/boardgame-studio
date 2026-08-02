@@ -61,6 +61,14 @@ test('인쇄 기본값이 A4 여백 9mm 다', () => {
   assert.equal(config.print.dpi, 300);
 });
 
+test('룰북 여백은 컴포넌트 시트와 따로 잡는다', () => {
+  // 9mm는 카드 열이 무너지지 않는 최댓값이라 나온 값이다. 룰북에는 자를 것이 없고,
+  // 그 폭으로 본문을 흘리면 한 줄이 50자를 넘어서 눈이 줄을 놓친다
+  const { print } = loadConfig({ reload: true });
+  assert.ok(print.rulebook.margin_mm > print.margin_mm);
+  assert.equal(typeof print.rulebook.font_pt, 'number');
+});
+
 test('역할별 모델이 전부 설정에 있다', () => {
   const { models } = loadConfig({ reload: true });
   for (const role of ['sim', 'review', 'image']) {

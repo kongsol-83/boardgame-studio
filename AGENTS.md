@@ -81,7 +81,8 @@ sim/play.html               플레이와 리플레이 UI
 playtest/sim-*.md           시뮬레이션 리포트
 playtest/table-*.md         오프라인 플레이 기록
 review/*.md                 크리틱 검토 리포트
-pnp/                        출력 PDF
+pnp/<slug>-<날짜>.pdf         컴포넌트 시트
+pnp/<slug>-rulebook-<날짜>.pdf  룰북
 ```
 
 **`projects/` 는 `example-*` 을 빼고 gitignore입니다.** 작업물은 공개 저장소에 올라가지
@@ -97,7 +98,7 @@ pnp/                        출력 PDF
 /bgs-components   spec.json과 컴포넌트 CSV
 /bgs-sim          규칙 엔진과 LLM 자동 플레이
 /bgs-art          아트 바이블, 앵커, 배치 생성
-/bgs-pnp          A4 프린트 앤 플레이 PDF
+/bgs-pnp          룰북 PDF와 A4 프린트 앤 플레이 PDF
 ```
 
 한 번에 끝나지 않습니다. 검토는 룰셋으로, 시뮬레이션은 검토로 돌아갑니다.
@@ -128,15 +129,22 @@ pnp/                        출력 PDF
 **의존성을 늘리지 않습니다.**
 
 ```
-tools/config.mjs    산출물 언어와 인쇄 기본값 확인
-tools/bgg/cli.mjs   seed / hydrate / search / similar / mechanics
-tools/spec.mjs      validate / resolve / sheet   (CLI 겸 라이브러리)
-tools/balance.mjs   컴포넌트 CSV 수치 분석
-tools/sim.mjs       smoke / estimate / run / report / serve
-tools/art.mjs       anchor / gen / estimate
-tools/pnp.mjs       PDF 렌더, --check 로 텍스트 오버플로 검사
-tools/validate.mjs  스킬·에이전트·룰 형식 검증 (CI)
+tools/config.mjs     산출물 언어와 인쇄 기본값 확인
+tools/doctor.mjs     개발 환경 점검 (npm run doctor)
+tools/bgg/cli.mjs    seed / hydrate / search / similar / mechanics / stats
+tools/spec.mjs       validate / resolve / sheet / presets
+tools/balance.mjs    컴포넌트 CSV 수치 분석
+tools/sim.mjs        smoke / estimate / run / report / serve
+tools/art.mjs        anchor / approve / gen / estimate
+tools/pnp.mjs        컴포넌트 PDF, --check 로 텍스트 오버플로 검사
+tools/rulebook.mjs   룰북 PDF, --check 로 넘치는 것 검사, --toc 로 목차
+tools/validate.mjs   스킬·에이전트·룰 형식 검증 (CI)
+tools/lib/           의존성 없는 공용 모듈. 규격, 통계, 마크다운, 폰트, LLM, 이미지
 ```
+
+**`tools/lib/` 에는 부수효과가 없습니다.** CLI는 인자를 읽고 JSON을 내는 껍데기이고
+판단은 `lib/` 에 있습니다. 그래서 테스트가 프로세스를 띄우지 않고 함수를 직접 부릅니다.
+새 계산을 넣을 때 CLI 파일에 바로 쓰지 않고 `lib/` 에 두는 편이 낫습니다.
 
 ## 서브에이전트 계층
 
