@@ -142,6 +142,12 @@ winget install --id Microsoft.PowerShell --source winget
 ```
 
 설치 후 에디터의 터미널 기본 프로필을 `pwsh` 로 바꿉니다. `npm run doctor` 가 확인해줍니다.
+다만 **에디터 터미널을 바꿔도 AI 에이전트가 쓰는 셸은 5.1일 수 있습니다.** 둘은 다른
+프로세스라 `$PSVersionTable.PSVersion` 으로 따로 확인해야 합니다.
+
+커밋 메시지처럼 **여러 줄이거나 따옴표가 들어간 텍스트는 `-m` 으로 넘기지 마세요.**
+PowerShell이 exe에 인자를 넘길 때 따옴표에서 문자열을 쪼갭니다. 파일에 쓰고
+`git commit -F <파일>` 로 넘기면 버전과 무관하게 안전합니다.
 
 AI 에이전트로 작업한다면 `.cursor/rules/shell.mdc` 를 읽어보세요. 셸을 최소한으로 쓰고
 파일은 편집 도구로 다루라는 규칙이 들어 있습니다. 이 규칙들은 전부 실제로 시간을 날린
@@ -322,6 +328,12 @@ winget install --id Microsoft.PowerShell --source winget
 ```
 
 Then switch your editor's default terminal profile to `pwsh`. `npm run doctor` verifies it.
+Note that **changing the editor terminal does not necessarily change the shell your AI agent
+runs in** — check separately with `$PSVersionTable.PSVersion`.
+
+Do not pass multi-line text or text containing quotes via `-m`, as with commit messages.
+PowerShell splits the string at embedded quotes when handing arguments to an exe. Write the
+text to a file and use `git commit -F <file>`, which is safe regardless of version.
 
 If you work with an AI agent, read `.cursor/rules/shell.mdc` — it keeps shell usage minimal
 and routes file edits through editing tools. Every rule in it came from an actual incident.

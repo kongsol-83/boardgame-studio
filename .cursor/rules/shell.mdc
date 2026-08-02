@@ -9,6 +9,16 @@ alwaysApply: true
 cp949이고 `>` 는 UTF-16으로, `Set-Content -Encoding UTF8` 은 BOM을 붙여 쓴다. 아래 규칙은
 그걸로 실제로 시간을 날린 사례에서 나왔다.
 
+**에디터 터미널을 PowerShell 7로 바꿨어도 에이전트가 쓰는 셸은 5.1일 수 있다.** 둘은 다른
+프로세스다. 확인은 이렇게 한다.
+
+```powershell
+$PSVersionTable.PSVersion.ToString()
+```
+
+그래서 아래 규칙은 **버전과 무관하게** 지킨다. 7에서 안 깨지는 것도 있지만, 확인하고 나서
+쓰는 것보다 그냥 안전한 방법을 쓰는 편이 빠르다.
+
 ## 파일은 셸로 만들거나 고치지 않는다
 
 **편집 도구를 쓴다.** `Set-Content`, `Out-File`, `echo >`, `sed`, `awk` 로 소스나 문서를
@@ -31,6 +41,59 @@ cp949이고 `>` 는 UTF-16으로, `Set-Content -Encoding UTF8` 은 BOM을 붙여
 
 한 번 쓰고 버릴 검증 코드가 필요하면 `projects/scratch/` 아래에 둔다. 이 경로는
 gitignore 대상이다.
+
+## 긴 텍스트를 인자로 넘기지 않는다
+
+**여러 줄이거나 따옴표가 들어간 텍스트는 명령줄 인자로 넘기지 않는다. 파일로 넘긴다.**
+
+PowerShell은 네이티브 명령에 인자를 넘길 때 문자열을 다시 파싱한다. 안에 따옴표가 있으면
+거기서 인자가 쪼개진다. 히어스트링(`@'...'@`)으로 감싸도 결과는 같다. **셸이 문자열을 만드는
+단계가 아니라 exe에 넘기는 단계에서 깨지기 때문이다.**
+
+실측해보면 이렇다. PowerShell 안에서는 멀쩡한 문자열 하나인데 exe가 받을 때는 넷이 된다.
+
+```powershell
+$msg = @'
+fix: 규칙이 스스로 모순되던 것을 고침
+
+- bgs-ruleset 이 "표에는 인원별 열을 둔다"고 강하게 말하던 것을 고쳤다
+'@
+node -e "process.argv.slice(1).forEach((a,i)=>console.log('['+i+'] '+JSON.stringify(a)))" "$msg"
+
+# [0] "fix: 규칙이 스스로 모순되던 것을 고침\n\n- bgs-ruleset 이 표에는"
+# [1] "인원별"
+# [2] "열을"
+# [3] "둔다고 강하게 말하던 것을 고쳤다"
+```
+
+그래서 `git commit -m` 에 이걸 넘기면 `error: pathspec '인원별' did not match any file(s)`
+이 난다. 커밋 메시지가 잘린 게 아니라 **파일명 목록으로 해석된 것**이라 에러 문구만 봐서는
+원인이 안 보인다.
+
+한 줄이라 쪼개지지 않는 경우에도 **따옴표는 조용히 사라진다.** 이쪽이 더 위험하다.
+명령이 성공하고 결과물만 틀린다.
+
+커밋 메시지는 **편집 도구로 임시 파일에 쓰고 `-F` 로 넘긴다.** 저장소 밖에 두면 실수로
+`git add` 될 일도 없다.
+
+```powershell
+# 1. 편집 도구로 $env:TEMP\bgs-commit-msg.txt 를 쓴다 (셸로 쓰지 않는다)
+# 2. 파일로 넘긴다
+git commit -F "$env:TEMP\bgs-commit-msg.txt"
+Remove-Item "$env:TEMP\bgs-commit-msg.txt"
+```
+
+같은 함정이 있는 것들이다. 전부 파일이나 stdin을 받는 방법이 따로 있다.
+
+| 하려는 것 | 인자 대신 |
+| --- | --- |
+| 커밋 메시지 | `git commit -F <파일>` |
+| 태그 메시지 | `git tag -F <파일>` |
+| PR 본문 | `gh pr create --body-file <파일>` |
+| 이슈 본문 | `gh issue create --body-file <파일>` |
+
+**한 줄이고 따옴표가 없으면** 그냥 `-m` 을 써도 된다. 규칙이 걸리는 건 여러 줄이거나
+따옴표·`$`·백틱이 들어갈 때다.
 
 ## 출력을 파일로 옮기지 않는다
 
@@ -64,4 +127,7 @@ PowerShell은 네이티브 명령의 **stderr를 ErrorRecord로 감싸서** 빨�
 ```
 
 근본적으로는 PowerShell 7 이상을 쓰면 `>`, `Set-Content`, 콘솔 인코딩이 전부 UTF-8
-기본이라 이 부류의 문제가 사라진다. `npm run doctor` 가 확인해준다.
+기본이라 **인코딩 부류의** 문제가 사라진다. `npm run doctor` 가 확인해준다.
+
+다만 인자 전달과 인라인 스크립트 파싱은 별개 문제다. 7에서도 확인 없이 기대면 안 되고,
+애초에 에이전트가 쓰는 셸이 7이라는 보장도 없다. 위 규칙들을 그대로 지킨다.

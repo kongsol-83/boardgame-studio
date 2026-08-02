@@ -112,10 +112,13 @@ winget install --id Microsoft.PowerShell --source winget
 ```
 
 설치 후 에디터의 터미널 기본 프로필을 `pwsh` 로 바꿉니다. `npm run doctor` 가 확인해줍니다.
+다만 **에디터 터미널을 바꿔도 AI 에이전트가 쓰는 셸은 5.1일 수 있습니다.** 둘은 다른
+프로세스입니다.
 
 AI 에이전트로 작업한다면 [.cursor/rules/shell.mdc](.cursor/rules/shell.mdc) 를 함께 보세요.
-PowerShell 7으로도 안 고쳐지는 것들(인라인 스크립트 파싱, stderr가 빨간 에러로 보이는 것,
-유닉스 명령 부재)을 규칙으로 막아둡니다. 전부 실제로 시간을 날린 사례에서 나왔습니다.
+PowerShell 7으로도 안 고쳐지거나 버전을 확신할 수 없는 것들(긴 텍스트를 인자로 넘길 때
+따옴표에서 갈라지는 것, 인라인 스크립트 파싱, stderr가 빨간 에러로 보이는 것, 유닉스 명령
+부재)을 규칙으로 막아둡니다. 전부 실제로 시간을 날린 사례에서 나왔습니다.
 
 ### 설정
 
@@ -362,11 +365,14 @@ winget install --id Microsoft.PowerShell --source winget
 ```
 
 Then switch your editor's default terminal profile to `pwsh`. `npm run doctor` verifies it.
+Note that **changing the editor terminal does not necessarily change the shell your AI agent
+runs in** — they are separate processes.
 
 If you work with an AI agent, also read [.cursor/rules/shell.mdc](.cursor/rules/shell.mdc).
-It covers the problems PowerShell 7 does *not* fix — inline script parsing, native stderr
-being rendered as a red error block, and missing Unix commands. Every rule in it came from
-an actual incident.
+It covers what PowerShell 7 does *not* fix, or what you cannot assume the version of — long
+text passed as an argument splitting at embedded quotes, inline script parsing, native stderr
+rendered as a red error block, and missing Unix commands. Every rule in it came from an
+actual incident.
 
 ### Configuration
 
