@@ -17,7 +17,9 @@ node tools/spec.mjs resolve example-tidepool    # mm -> 픽셀, 유효 DPI
 node tools/spec.mjs sheet example-tidepool      # A4 몇 장이 필요한가
 node tools/balance.mjs example-tidepool --cost cost --value power
 node tools/pnp.mjs example-tidepool --check     # 텍스트가 카드에 들어가는가
-node tools/pnp.mjs example-tidepool             # PDF 렌더
+node tools/pnp.mjs example-tidepool             # 컴포넌트 PDF 렌더
+node tools/rulebook.mjs example-tidepool --check  # 룰북에 넘치는 것이 있는가
+node tools/rulebook.mjs example-tidepool --toc    # 룰북 PDF 렌더 (목차 포함)
 node tools/sim.mjs smoke example-tidepool       # 랜덤 봇 엔진 검사
 node tools/sim.mjs serve example-tidepool       # 브라우저에서 직접 플레이
 ```
@@ -29,6 +31,16 @@ CI가 매번 이 명령들을 실행합니다. 도구가 깨지면 여기서 걸
 ```bash
 node tools/sim.mjs run example-tidepool --games 10    # OpenAI 키
 node tools/art.mjs anchor example-tidepool --set nature --subject "..."
+```
+
+**아트 파일은 커밋되지 않습니다.** 승인된 스타일 앵커 없이 `art/<comp-id>/` 에 그림이
+놓여 있으면 파이프라인이 스스로 모순되기 때문입니다(승인 전에는 배치 생성을 거부합니다).
+그래서 CI는 자리표시 이미지를 만들어 넣고 `pnp` 가 이미지를 얹는지만 확인합니다.
+직접 보려면 이렇게 합니다.
+
+```bash
+node tests/fixtures/placeholder-png.mjs projects/example-tidepool/art/action-card/TP01.png 750 1039
+node tools/pnp.mjs example-tidepool --component action-card
 ```
 
 ## 일부러 넣어둔 것들
@@ -96,3 +108,9 @@ node tools/art.mjs anchor example-tidepool --set nature --subject "..."
 읽어서 찾는 것과 플레이해서 걸리는 것은 이렇게 다릅니다. 크리틱은 **빈도와 무관하게**
 빠짐없이 찾고, 플레이테스터는 **실제로 아픈 순서**를 알려줍니다. 그래서 룰북을 고칠 때는
 크리틱으로 목록을 만들고 플레이테스터로 순서를 정하는 게 맞습니다.
+
+종합한 결과는 [`review/2026-08-02.md`](review/2026-08-02.md) 에 있습니다. 크리틱 셋을
+실제로 돌려 중복을 합치고 충돌을 남긴 리포트입니다. 셋이 동시에 지적한 항목(시작
+플레이어)이 어떻게 1순위로 올라가고, 등급이 갈린 항목(TP10)을 어떻게 양쪽 다 적어두는지가
+그 파일의 볼 곳입니다. **이 예제는 지적을 반영하지 않습니다.** 막아버리면 다음 사람이
+크리틱을 돌려볼 것이 없어집니다.

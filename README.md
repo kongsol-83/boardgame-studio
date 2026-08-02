@@ -28,7 +28,7 @@ A4 프린트 앤 플레이 PDF까지 뽑는 것을 목표로 합니다.
 /bgs-components   mm 단위 컴포넌트 규격과 종류별 CSV 데이터
 /bgs-sim          규칙 엔진 구현과 LLM 자동 플레이로 명백한 사고 거르기
 /bgs-art          아트 바이블, 스타일 앵커, 배치 일러스트 생성
-/bgs-pnp          재단선 포함 A4 프린트 앤 플레이 PDF
+/bgs-pnp          룰북 PDF와 재단선 포함 A4 프린트 앤 플레이 PDF
 ```
 
 한 번에 끝나지 않는 걸 전제로 합니다. 검토 결과는 룰셋으로 돌아가고, 시뮬레이션 결과는 검토로
@@ -49,6 +49,11 @@ A4 프린트 앤 플레이 PDF까지 뽑는 것을 목표로 합니다.
 3열이 무너집니다.** 시트당 9장이 8장이 됩니다. 가장 흔한 규격에서 한 장을 잃는 셈입니다.
 8mm까지 내리면 몇몇 규격에서 조금 더 얻지만 프린터 인쇄 가능 영역의 여유가 얇아집니다.
 9mm가 3x3을 지키면서 여유도 남는 값입니다.
+
+**룰북은 여백이 다릅니다.** 위 9mm는 카드 열이 무너지지 않는 최댓값이라 나온 값이고,
+룰북에는 자를 것이 없습니다. 9mm면 한 줄이 192mm인데 10.5pt 한글로 50자가 넘어서 눈이
+줄을 놓칩니다. 그래서 기본 20mm로 따로 둡니다. 룰북과 컴포넌트를 한 값으로 묶으면 둘 중
+하나가 반드시 나빠집니다.
 
 **시뮬레이션의 목적은 밸런싱이 아닙니다.** 보드게임 밸런스는 소수점을 다투는 영역이 아니고,
 그 정밀도는 시뮬로 얻을 것도 아닙니다. 시뮬은 **테이블에 들고 가기 전에 명백한 사고를 거르는
@@ -145,7 +150,12 @@ PowerShell 7으로도 안 고쳐지거나 버전을 확신할 수 없는 것들(
     "review": "gpt-5.6-terra",   // 리포트를 쓸 때 피드백을 묶는 모델
     "image": "gpt-image-2"       // 아트 생성
   },
-  "print": { "sheet": "A4", "margin_mm": 9, "dpi": 300 },
+  "print": {
+    "sheet": "A4",                 // 컴포넌트 시트
+    "margin_mm": 9,
+    "dpi": 300,
+    "rulebook": { "margin_mm": 20, "font_pt": 10.5 }   // 룰북은 여백이 다릅니다
+  },
   "sim":   { "maxCompletionTokens": null, "games": 30, "concurrency": 20 },
   "art":   { "quality": "low", "imagesPerMinute": 5 },
   "bgg":   { "ranksMaxAgeDays": 90, "hydrateTop": 20000 }
@@ -170,7 +180,8 @@ node tools/config.mjs      # 지금 설정 확인
 node tools/spec.mjs resolve example-tidepool    # mm -> 픽셀, 유효 DPI
 node tools/spec.mjs sheet example-tidepool      # A4 몇 장이 필요한가
 node tools/balance.mjs example-tidepool --cost cost --value power
-node tools/pnp.mjs example-tidepool             # PDF 렌더
+node tools/pnp.mjs example-tidepool             # 컴포넌트 PDF 렌더
+node tools/rulebook.mjs example-tidepool --toc  # 룰북 PDF 렌더
 node tools/sim.mjs smoke example-tidepool       # 랜덤 봇 엔진 검사
 node tools/sim.mjs serve example-tidepool       # 브라우저에서 직접 플레이
 ```
@@ -214,7 +225,8 @@ node tools/bgg/cli.mjs hydrate       # 상위 20000개 상세 조회, 약 17분
                     검토   — 메커니즘 크리틱 · 룰 크리틱 · 플레이테스터
                     기타   — 리서처 · 시뮬레이션 엔지니어 · 컴포넌트 매니저
 .cursor/skills/     /bgs-* 워크플로우 스킬
-tools/              Node CLI — bgg, spec, balance, sim, art, pnp
+tools/              Node CLI — bgg, spec, balance, sim, art, pnp, rulebook
+tools/lib/          부수효과 없는 공용 모듈. 판단은 전부 여기 있다
 presets/            표준 컴포넌트 규격 모음
 projects/           작업 중인 게임들. example-* 외에는 gitignore
 data/               로컬 BGG 인덱스와 랭킹 덤프. gitignore
@@ -241,12 +253,17 @@ data/               로컬 BGG 인덱스와 랭킹 덤프. gitignore
 
 ## 상태
 
-초기 개발 중입니다. 무엇이 들어왔는지는 [CHANGELOG.md](CHANGELOG.md) 를 보세요.
+0.1.0 입니다. 파이프라인 여덟 단계가 전부 붙었고 컨셉에서 룰북 PDF까지 한 바퀴 돕니다.
+여전히 초기 개발이라 규격과 명령이 바뀔 수 있습니다. 무엇이 들어왔는지는
+[CHANGELOG.md](CHANGELOG.md) 를 보세요.
 
 ## 기여
 
 환영합니다. 이 프로젝트는 코드보다 프롬프트와 지식 기여가 더 중요할 수 있습니다.
 [CONTRIBUTING.md](CONTRIBUTING.md) 를 봐주세요.
+
+키를 다루고 룰셋을 외부 API로 보내는 도구가 있으므로 [SECURITY.md](SECURITY.md) 도
+한 번 읽어두시면 좋습니다. 취약점은 공개 이슈가 아니라 비공개로 받습니다.
 
 ## 라이선스
 
@@ -290,7 +307,7 @@ It is not a digital board game engine, and it is not trying to be one.
 /bgs-components   component spec in mm, per-component CSV data
 /bgs-sim          rules engine + LLM self-play, to catch obvious defects early
 /bgs-art          art bible, style anchors, batch illustration
-/bgs-pnp          A4 print-and-play PDF with cut lines
+/bgs-pnp          a rulebook PDF, and an A4 print-and-play PDF with cut lines
 ```
 
 Rounds are expected. Review feeds back into the ruleset, simulation feeds back into
@@ -312,6 +329,11 @@ of printable width. **Half a millimetre costs you an entire column**, dropping t
 common card size from 9 per sheet to 8. Going down to 8mm gains a little on a few sizes
 but leaves less room for printer hardware margins. 9mm keeps the 3x3 layout with slack to
 spare.
+
+**The rulebook uses a different margin.** That 9mm is the largest value that keeps card
+columns intact, and a rulebook has nothing to cut. At 9mm a line is 192mm wide, which runs
+past 50 Korean characters at 10.5pt and makes the eye lose its place. So the rulebook
+defaults to 20mm, configured separately. Tie the two together and one of them gets worse.
 
 **Simulation is not for balancing.** Board game balance is not a decimal-point discipline,
 and that precision is not something a simulation can give you anyway. Simulation is a
@@ -414,7 +436,12 @@ file accepts comments (JSONC), so the reasoning behind each value sits next to i
     "review": "gpt-5.6-terra",   // clusters feedback when writing the report
     "image": "gpt-image-2"       // art generation
   },
-  "print": { "sheet": "A4", "margin_mm": 9, "dpi": 300 },
+  "print": {
+    "sheet": "A4",                 // component sheets
+    "margin_mm": 9,
+    "dpi": 300,
+    "rulebook": { "margin_mm": 20, "font_pt": 10.5 }   // the rulebook differs
+  },
   "sim":   { "maxCompletionTokens": null, "games": 30, "concurrency": 20 },
   "art":   { "quality": "low", "imagesPerMinute": 5 },
   "bgg":   { "ranksMaxAgeDays": 90, "hydrateTop": 20000 }
@@ -440,7 +467,8 @@ against the [bundled example project](projects/example-tidepool/):
 node tools/spec.mjs resolve example-tidepool    # mm -> pixels, effective DPI
 node tools/spec.mjs sheet example-tidepool      # how many A4 sheets
 node tools/balance.mjs example-tidepool --cost cost --value power
-node tools/pnp.mjs example-tidepool             # render the PDF
+node tools/pnp.mjs example-tidepool             # render the component PDF
+node tools/rulebook.mjs example-tidepool --toc  # render the rulebook PDF
 node tools/sim.mjs smoke example-tidepool       # random-bot engine check
 node tools/sim.mjs serve example-tidepool       # play it in a browser
 ```
@@ -487,7 +515,8 @@ Once the dump is older than 90 days, research commands warn you and open the dow
                     review — mechanism critic, rules critic, playtester
                     other  — researcher, sim engineer, component manager
 .cursor/skills/     the /bgs-* workflow skills
-tools/              Node CLIs — bgg, spec, balance, sim, art, pnp
+tools/              Node CLIs — bgg, spec, balance, sim, art, pnp, rulebook
+tools/lib/          side-effect-free shared modules; all the judgement lives here
 presets/            standard component sizes
 projects/           your games. gitignored except example-*
 data/               local BGG index and ranking dumps. gitignored
@@ -514,13 +543,19 @@ gitignored entirely; only `projects/example-*/` is tracked.
 
 ## Status
 
-Early development. See [CHANGELOG.md](CHANGELOG.md) for what has landed.
+0.1.0. All eight pipeline stages are in place, taking a game from a one-line concept to a
+rulebook PDF. Still early development, so specs and commands may change. See
+[CHANGELOG.md](CHANGELOG.md) for what has landed.
 
 ## Contributing
 
 Contributions are welcome, and prompt and knowledge contributions matter here as much as
 code. See [CONTRIBUTING.md](CONTRIBUTING.md). Issues and pull requests in English are
 fine.
+
+Since the tooling handles API keys and sends rulesets to third-party APIs, skim
+[SECURITY.md](SECURITY.md) too. Vulnerabilities are reported privately, not in public
+issues.
 
 ## License
 

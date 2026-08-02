@@ -1,6 +1,6 @@
 {
   "name": "boardgame-studio",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "An AI board game design studio for Cursor. From a one-line idea to BGG reference research, mechanism proposals, a ruleset, LLM playtest simulation, and print-and-play PDFs.",
@@ -36,7 +36,8 @@
     "balance": "node tools/balance.mjs",
     "sim": "node tools/sim.mjs",
     "art": "node tools/art.mjs",
-    "pnp": "node tools/pnp.mjs"
+    "pnp": "node tools/pnp.mjs",
+    "rulebook": "node tools/rulebook.mjs"
   },
   "dependencies": {
     "fast-xml-parser": "^5.10.1",
