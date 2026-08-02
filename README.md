@@ -180,6 +180,9 @@ node tools/sim.mjs serve example-tidepool       # 브라우저에서 직접 플�
 너무 작아서 키워야 하는 토큰, 그리고 답이 빠진 룰북. 자세한 건
 [예제 README](projects/example-tidepool/README.md)에 있습니다.
 
+**명령을 따라 치면서 하나씩 직접 걸려보려면 [튜토리얼](projects/example-tidepool/TUTORIAL.md)이
+있습니다.** 규격에서 룰북 개정까지 7단계이고, 전부 키 없이 20분쯤 걸립니다.
+
 키가 필요한 건 셋뿐입니다. BGG 조사(BGG 토큰), LLM 플레이테스트와 아트 생성(OpenAI 키).
 
 ### BGG 인덱스 구축
@@ -446,6 +449,10 @@ The example deliberately contains problems so you can see what the tools catch: 
 that is overpowered for its cost, a board that does not fit on A4, a 4:1 component the
 image model cannot generate, a token too small to meet the minimum resolution, and a
 rulebook with gaps. See the [example README](projects/example-tidepool/README.md).
+
+**To run into each of them yourself, follow the
+[tutorial](projects/example-tidepool/TUTORIAL.md).** Seven steps from component specs to a
+ruleset revision, all of them keyless, about 20 minutes.
 
 Only three things need a key: BGG research (BGG token), LLM playtesting, and art
 generation (OpenAI key).
