@@ -134,7 +134,8 @@ export function createSeedWriter(db) {
   `);
   const clearRank = db.prepare('DELETE FROM ranks WHERE game_id = ? AND rank_type = ?');
 
-  return function writeSeed(game, subranks) {
+  // subranks 는 없어도 된다. 없다고 죽으면 부르는 쪽에서 원인을 찾기 어렵다
+  return function writeSeed(game, subranks = {}) {
     upsertGame.run(
       game.id,
       game.name,

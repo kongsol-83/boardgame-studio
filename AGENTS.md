@@ -139,12 +139,16 @@ tools/art.mjs        anchor / approve / gen / estimate
 tools/pnp.mjs        컴포넌트 PDF, --check 로 텍스트 오버플로 검사
 tools/rulebook.mjs   룰북 PDF, --check 로 넘치는 것 검사, --toc 로 목차
 tools/validate.mjs   스킬·에이전트·룰 형식 검증 (CI)
-tools/lib/           의존성 없는 공용 모듈. 규격, 통계, 마크다운, 폰트, LLM, 이미지
+tools/lib/           의존성 없는 공용 모듈. 규격, 인쇄 배치, 통계, 마크다운, 폰트, LLM
 ```
 
 **`tools/lib/` 에는 부수효과가 없습니다.** CLI는 인자를 읽고 JSON을 내는 껍데기이고
 판단은 `lib/` 에 있습니다. 그래서 테스트가 프로세스를 띄우지 않고 함수를 직접 부릅니다.
 새 계산을 넣을 때 CLI 파일에 바로 쓰지 않고 `lib/` 에 두는 편이 낫습니다.
+
+**계산을 CLI 파일에 두면 테스트할 방법이 없어집니다.** `pnp.mjs` 의 글자 크기 계산과
+`validate.mjs` 의 검사 로직이 그래서 뒤늦게 `lib/` 로 내려왔습니다. 인쇄하고 나서 알면
+늦는 값이나, 조용히 검사를 그만두면 아무도 모르는 로직은 특히 그렇습니다.
 
 ## 서브에이전트 계층
 

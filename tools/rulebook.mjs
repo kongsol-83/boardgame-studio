@@ -33,10 +33,8 @@ import { ROOT } from './lib/env.mjs';
 import { fontHelp, needsUnicodeFont, resolveBoldFont, resolveFont } from './lib/font.mjs';
 import { parseFrontmatter } from './lib/frontmatter.mjs';
 import { outline, parseMarkdown, spansToText } from './lib/markdown.mjs';
+import { pt } from './lib/pnp.mjs';
 import { SHEETS } from './lib/spec.mjs';
-
-/** mm -> PDF 포인트. 1pt = 1/72 인치. */
-const pt = (mm) => (mm * 72) / 25.4;
 
 const COLOR = {
   text: '#1a1a1a',
