@@ -119,6 +119,9 @@ jobs:
       - name: A4 시트 계산
         run: node tools/spec.mjs sheet example-tidepool
 
+      - name: 표준 규격 프리셋
+        run: node tools/spec.mjs presets
+
       - name: 수치 분석
         run: node tools/balance.mjs example-tidepool --cost cost --value power
 
@@ -131,5 +134,43 @@ jobs:
           # 빈 파일이 나와도 종료 코드는 0일 수 있으므로 크기를 확인한다
           find projects/example-tidepool/pnp -name '*.pdf' -size +1k | grep -q .
 
+      # 아트를 뽑으려면 OpenAI 키가 필요해서, 이미지를 얹는 분기가 여기서만 돈다.
+      # 리눅스와 Windows에서 경로 해석이 갈리는 자리라 한 번은 실제로 넣어봐야 한다.
+      # 예제에 그림을 커밋하지 않는 이유는 픽스처 주석에 적어뒀다.
+      - name: 아트가 붙은 카드 렌더
+        run: |
+          for id in TP01 TP02; do
+            node tests/fixtures/placeholder-png.mjs \
+              "projects/example-tidepool/art/action-card/$id.png" 750 1039
+          done
+          node tools/pnp.mjs example-tidepool --component action-card
+
+          # 이미지가 실제로 들어갔는지 본다. pnp 는 이미지가 깨져도 도형으로 폴백하고
+          # 종료 코드 0으로 끝나므로, 성공 여부만 보면 아무것도 검증하지 못한다.
+          pdf=$(ls projects/example-tidepool/pnp/example-tidepool-????-??-??.pdf | head -1)
+          if ! grep -a -q '/Subtype */Image' "$pdf"; then
+            echo "::error::아트가 PDF에 들어가지 않았습니다: $pdf"
+            exit 1
+          fi
+
+      - name: 룰북 검사
+        run: node tools/rulebook.mjs example-tidepool --check
+
+      - name: 룰북 PDF 렌더
+        run: |
+          node tools/rulebook.mjs example-tidepool --toc
+          find projects/example-tidepool/pnp -name '*-rulebook-*.pdf' -size +1k | grep -q .
+
       - name: 엔진 스모크 (랜덤 봇)
         run: node tools/sim.mjs smoke example-tidepool --games 2000
+
+      # 키 없이 도는 추정들. 가격표나 규격 해석이 깨지면 여기서 걸린다
+      - name: 비용 추정
+        run: |
+          node tools/sim.mjs estimate example-tidepool
+          node tools/art.mjs estimate example-tidepool
+
+      # 처음 클론한 사람이 가장 먼저 실행하는 명령이다. 여기서 죽으면 첫인상이 끝난다.
+      # 키와 인덱스가 없는 러너에서는 주의만 내고 종료 코드는 0이다.
+      - name: 개발 환경 점검
+        run: npm run doctor
