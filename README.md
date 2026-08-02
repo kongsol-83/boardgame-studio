@@ -107,13 +107,24 @@ BOM 없는 UTF-8 스크립트 읽기  실패             정상
 `SyntaxError: Invalid or unexpected token` 이 나는데, 파일을 봐서는 멀쩡해 보이기 때문에
 원인을 찾는 데 시간이 걸립니다.
 
-```powershell
-winget install --id Microsoft.PowerShell --source winget
-```
+#### winget 말고 MSI로 설치하세요
 
-설치 후 에디터의 터미널 기본 프로필을 `pwsh` 로 바꿉니다. `npm run doctor` 가 확인해줍니다.
-다만 **에디터 터미널을 바꿔도 AI 에이전트가 쓰는 셸은 5.1일 수 있습니다.** 둘은 다른
-프로세스입니다.
+**`winget install --id Microsoft.PowerShell` 을 쓰면 안 됩니다.** 이 패키지는 MSIX(Store)만
+제공하는데, MSIX로 깔면 PATH에 **0바이트짜리 실행 별칭**만 생깁니다. 사람이 터미널에
+`pwsh` 를 치면 잘 뜨지만, **Cursor의 AI 에이전트는 이걸 유효한 pwsh로 인정하지 않고 내장
+5.1로 떨어집니다.** 설치했는데 에이전트만 5.1인 상태가 됩니다.
+
+[PowerShell 릴리스](https://github.com/PowerShell/PowerShell/releases)에서 `win-x64.msi` 를
+받아 설치하세요. `C:\Program Files\PowerShell\7\pwsh.exe` 에 실체가 생기고 시스템 PATH에
+등록됩니다. `npm run doctor` 가 MSIX로 깔린 상태를 감지해서 알려줍니다.
+
+설치 후 에디터의 터미널 기본 프로필을 `pwsh` 로 바꾸고, **Cursor를 완전히 종료했다 켭니다.**
+Reload Window로는 환경변수가 갱신되지 않습니다.
+
+에디터 터미널 설정은 에이전트 셸에 반영되지 않습니다. Cursor가 [알려진 버그로 인정한
+사안](https://forum.cursor.com/t/windows-agent-keep-using-powershell-5-instead-of-powershell-7/162813)
+이고, 실질적으로 셸을 정하는 건 PATH 해석 결과입니다. `npm run doctor` 가 지금 이 셸이
+무엇인지 따로 보여줍니다.
 
 AI 에이전트로 작업한다면 [.cursor/rules/shell.mdc](.cursor/rules/shell.mdc) 를 함께 보세요.
 PowerShell 7으로도 안 고쳐지거나 버전을 확신할 수 없는 것들(긴 텍스트를 인자로 넘길 때
@@ -360,13 +371,25 @@ file written by 5.1 carries a BOM that breaks the shebang and yields
 `SyntaxError: Invalid or unexpected token` — and the file looks perfectly fine when you
 open it, so the cause is not obvious.
 
-```powershell
-winget install --id Microsoft.PowerShell --source winget
-```
+#### Install the MSI, not the winget package
 
-Then switch your editor's default terminal profile to `pwsh`. `npm run doctor` verifies it.
-Note that **changing the editor terminal does not necessarily change the shell your AI agent
-runs in** — they are separate processes.
+**Do not use `winget install --id Microsoft.PowerShell`.** That package only ships MSIX
+(Store), and an MSIX install leaves nothing on `PATH` but a **zero-byte execution alias**.
+Typing `pwsh` yourself works fine, but **Cursor's AI agent does not accept it as a valid
+pwsh and falls back to the built-in 5.1.** You end up with PowerShell 7 installed and the
+agent still on 5.1.
+
+Download `win-x64.msi` from [the PowerShell releases](https://github.com/PowerShell/PowerShell/releases)
+instead. That puts a real binary at `C:\Program Files\PowerShell\7\pwsh.exe` and registers it
+on the system `PATH`. `npm run doctor` detects the MSIX situation and tells you.
+
+Then switch your editor's default terminal profile to `pwsh` and **fully quit and reopen
+Cursor.** Reload Window does not refresh environment variables.
+
+Editor terminal settings do not reach the agent's shell. Cursor has
+[acknowledged this as a bug](https://forum.cursor.com/t/windows-agent-keep-using-powershell-5-instead-of-powershell-7/162813),
+and what actually decides the shell is `PATH` resolution. `npm run doctor` reports which
+shell you are currently in, separately.
 
 If you work with an AI agent, also read [.cursor/rules/shell.mdc](.cursor/rules/shell.mdc).
 It covers what PowerShell 7 does *not* fix, or what you cannot assume the version of — long

@@ -75,6 +75,16 @@
 
 ### Fixed
 
+- **Windows 설치 안내가 오히려 문제를 만들던 것을 고쳤다.** `winget install --id
+  Microsoft.PowerShell` 이 MSIX(Store)만 제공하는데, MSIX로 깔면 PATH에 0바이트 실행
+  별칭만 남는다. 사람이 `pwsh` 를 치면 동작하지만 **Cursor의 에이전트 셸은 이걸 인식하지
+  못하고 내장 5.1로 폴백한다.** 설치했는데 에이전트만 5.1인 상태가 된다.
+  [Cursor가 알려진 버그로 인정한 사안](https://forum.cursor.com/t/windows-agent-keep-using-powershell-5-instead-of-powershell-7/162813)
+  이고 터미널 프로필 설정으로는 못 바꾼다. 안내를 GitHub 릴리스의 `win-x64.msi` 로 바꿨다
+- `npm run doctor` 가 두 가지를 나눠서 본다. PowerShell 7이 MSIX로 깔렸는지, 그리고
+  **지금 이 셸이 실제로 무엇인지**. 후자가 5.1이면 완전 종료 후 재시작을 안내한다
+  (Reload Window로는 환경변수가 갱신되지 않는다)
+
 - **산출물 날짜가 UTC로 찍히던 것을 고쳤다.** 한국에서 자정과 오전 9시 사이에 만든 파일이
   전날 날짜가 됐다. 예제 시뮬레이션 리포트가 실제로 하루 전 날짜로 커밋돼 있었다.
   `tools/lib/datetime.mjs` 를 만들어 PnP PDF 파일명, 시뮬레이션 로그와 리포트, 아트 승인

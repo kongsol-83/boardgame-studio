@@ -137,13 +137,14 @@ BOM 없는 UTF-8 스크립트를 읽지 못하고, `>` 는 UTF-16으로 쓰고, 
 납니다. 실측 비교는 [README의 해당 절](README.md#windows라면-powershell-7을-먼저-설치하세요)에
 있습니다.
 
-```powershell
-winget install --id Microsoft.PowerShell --source winget
-```
+**winget 말고 [MSI](https://github.com/PowerShell/PowerShell/releases)로 설치하세요.**
+`winget install --id Microsoft.PowerShell` 은 MSIX(Store)만 제공하는데, 그러면 PATH에
+0바이트 실행 별칭만 생겨서 **AI 에이전트가 pwsh를 인식하지 못하고 5.1로 떨어집니다.**
+`win-x64.msi` 로 깔면 `C:\Program Files\PowerShell\7\pwsh.exe` 에 실체가 생깁니다.
 
-설치 후 에디터의 터미널 기본 프로필을 `pwsh` 로 바꿉니다. `npm run doctor` 가 확인해줍니다.
-다만 **에디터 터미널을 바꿔도 AI 에이전트가 쓰는 셸은 5.1일 수 있습니다.** 둘은 다른
-프로세스라 `$PSVersionTable.PSVersion` 으로 따로 확인해야 합니다.
+설치 후 에디터의 터미널 기본 프로필을 `pwsh` 로 바꾸고 **Cursor를 완전히 종료했다 켭니다.**
+Reload Window로는 환경변수가 갱신되지 않습니다. `npm run doctor` 가 설치 방식과 지금 이
+셸이 무엇인지를 각각 확인해줍니다.
 
 커밋 메시지처럼 **여러 줄이거나 따옴표가 들어간 텍스트는 `-m` 으로 넘기지 마세요.**
 PowerShell이 exe에 인자를 넘길 때 따옴표에서 문자열을 쪼갭니다. 파일에 쓰고
@@ -323,13 +324,15 @@ syntax error that is hard to trace. See
 [the README section](README.md#on-windows-install-powershell-7-first) for a measured
 comparison.
 
-```powershell
-winget install --id Microsoft.PowerShell --source winget
-```
+**Install the [MSI](https://github.com/PowerShell/PowerShell/releases), not the winget
+package.** `winget install --id Microsoft.PowerShell` only ships MSIX (Store), which leaves
+a zero-byte execution alias on `PATH` — **the AI agent does not recognise it as pwsh and
+falls back to 5.1.** The `win-x64.msi` puts a real binary at
+`C:\Program Files\PowerShell\7\pwsh.exe`.
 
-Then switch your editor's default terminal profile to `pwsh`. `npm run doctor` verifies it.
-Note that **changing the editor terminal does not necessarily change the shell your AI agent
-runs in** — check separately with `$PSVersionTable.PSVersion`.
+Then switch your editor's default terminal profile to `pwsh` and **fully quit and reopen
+Cursor.** Reload Window does not refresh environment variables. `npm run doctor` checks both
+the install method and which shell you are currently in.
 
 Do not pass multi-line text or text containing quotes via `-m`, as with commit messages.
 PowerShell splits the string at embedded quotes when handing arguments to an exe. Write the

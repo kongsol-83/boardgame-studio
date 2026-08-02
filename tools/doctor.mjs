@@ -47,7 +47,38 @@ if (process.platform === 'win32') {
     warn(
       'PowerShell 7',
       '미설치. Windows PowerShell 5.1은 > 리다이렉션이 UTF-16으로, Set-Content -Encoding UTF8 이 BOM을 붙여 씁니다. 한글도 콘솔에서 깨집니다',
-      'winget install --id Microsoft.PowerShell --source winget 후 에디터 터미널 기본 프로필을 pwsh 로 바꾸세요',
+      'https://github.com/PowerShell/PowerShell/releases 에서 win-x64.msi 를 받아 설치하세요. winget 패키지는 MSIX라 아래 문제가 생깁니다',
+    );
+  }
+
+  /*
+   * MSIX(Microsoft Store)로 깔린 PowerShell은 PATH에 0바이트 실행 별칭만 남긴다.
+   * 사람이 치면 동작하지만 Cursor의 에이전트 셸은 이걸 유효한 pwsh로 인정하지 않고
+   * 내장 5.1로 폴백한다. winget 의 Microsoft.PowerShell 이 MSIX만 제공하므로
+   * 안내대로 설치해도 이 상태가 된다.
+   */
+  const msiPwsh = 'C:\\Program Files\\PowerShell\\7\\pwsh.exe';
+  if (pwsh && !existsSync(msiPwsh)) {
+    warn(
+      'PowerShell 설치 방식',
+      'MSIX(Store)로 설치되어 PATH에는 0바이트 별칭만 있습니다. 에이전트 셸이 이걸 인식하지 못하고 5.1로 떨어집니다',
+      'https://github.com/PowerShell/PowerShell/releases 에서 win-x64.msi 로 다시 설치하세요',
+    );
+  }
+
+  /*
+   * 이 스크립트를 돌리는 셸이 실제로 무엇인가. 위의 pwsh 존재 여부와 다른 질문이다.
+   * Cursor의 에이전트 셸은 에디터 터미널 설정과 무관하게 정해지므로 따로 봐야 한다.
+   */
+  if (process.env.PSModulePath?.includes('PowerShell\\7')) {
+    ok('이 셸', 'PowerShell 7');
+  } else {
+    warn(
+      '이 셸',
+      'Windows PowerShell 5.1에서 돌고 있습니다. 에디터 터미널을 pwsh 로 바꿔도 AI 에이전트가 쓰는 셸은 별개입니다',
+      existsSync(msiPwsh)
+        ? 'Cursor를 완전히 종료했다 다시 켜세요. Reload Window로는 환경변수가 갱신되지 않습니다'
+        : 'MSI로 PowerShell 7을 설치한 뒤 Cursor를 완전히 종료했다 켜세요',
     );
   }
 }
