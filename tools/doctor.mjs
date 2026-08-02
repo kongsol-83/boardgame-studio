@@ -70,8 +70,10 @@ if (process.platform === 'win32') {
    * 이 스크립트를 돌리는 셸이 실제로 무엇인가. 위의 pwsh 존재 여부와 다른 질문이다.
    * Cursor의 에이전트 셸은 에디터 터미널 설정과 무관하게 정해지므로 따로 봐야 한다.
    */
-  if (process.env.PSModulePath?.includes('PowerShell\\7')) {
-    ok('이 셸', 'PowerShell 7');
+  // PSModulePath 의 대소문자는 셸이 어떻게 실행됐는지에 따라 달라지므로 무시한다.
+  const shellMajor = Number(process.env.PSModulePath?.match(/[\\/]powershell[\\/](\d+)[\\/]modules/i)?.[1]);
+  if (shellMajor >= 7) {
+    ok('이 셸', `PowerShell ${shellMajor}`);
   } else {
     warn(
       '이 셸',
