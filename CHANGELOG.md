@@ -75,7 +75,18 @@
 
 ### Changed
 
-- `.cursor/agents/` 를 `directors/`(2), `leads/`(2), `specialists/`(9) 세 단으로 나눴다.
+- 게임 디자인 부서를 추가했다. `bgs-design-lead` 가 아래 넷을 조율한다.
+  `bgs-system-designer`(규칙 구조와 코어 루프), `bgs-content-designer`(카드 종류와 덱 구성),
+  `bgs-narrative-designer`(테마 붙이기, 이름, 용어 통일), `bgs-balance-designer`(수치)
+- **직군명을 한국 게임 업계 관례로 통일했다.** 디자이너는 기획 직군이고 그림을 그리는 쪽은
+  아티스트다. 업계에서 일러스트레이터는 홍보용 그림을 그리는 사람을 가리키므로 뺐다.
+  `char-illustrator` → `character-artist`, `scene-illustrator` → `background-artist`,
+  `graphic-designer` → `ui-artist`, `balance-analyst` → `balance-designer`.
+  `ui-artist` 는 보드게임 업계에서 Graphic Designer라고 부르는 자리지만, 디자이너를 기획에만
+  쓰기로 해서 바꿨다. 카드가 곧 플레이어와 게임 사이의 인터페이스라는 관점이기도 하다
+- `bgs-component-manager` 를 `leads/` 에서 `specialists/` 로 내렸다. 사람을 관리하는
+  자리가 아니라 규격 하나를 깊게 보는 자리다
+- `.cursor/agents/` 를 `directors/`(2), `leads/`(2), `specialists/`(13) 세 단으로 나눴다.
   **Cursor는 에이전트를 파일명으로 식별하고 경로는 무시**하므로 이름과 참조는 그대로다.
   폴더는 파일 트리를 읽기 위한 구분이고, 슬래시 메뉴에는 드러나지 않는다.
   하위 폴더 스캔은 Cursor가 버그로 규정해 수정 예정이라, 로더가 바뀌면 에이전트가 한꺼번에

@@ -46,7 +46,7 @@ node tools/art.mjs anchor <slug> --set character --subject "..." --n 3
 ```
 
 앵커 세트는 `spec.json` 의 `anchor_sets` 에 선언된 것들이다. 인물·생물 계열은
-`bgs-char-illustrator`, 환경·사물 계열은 `bgs-scene-illustrator` 가 소재를 고른다.
+`bgs-character-artist`, 환경·사물 계열은 `bgs-background-artist` 가 소재를 고른다.
 
 **가장 전형적인 것으로 뽑는다.** 특이한 걸 앵커로 삼으면 나머지가 그 특이함을 따라간다.
 
@@ -95,7 +95,7 @@ node tools/art.mjs gen <slug> --only AC03,AC07,AC11 --force
 
 ### 7. 정보 설계
 
-`bgs-graphic-designer` 에게 맡긴다. 그림이 다 나온 뒤에 본다.
+`bgs-ui-artist` 에게 맡긴다. 그림이 다 나온 뒤에 본다.
 
 - 아트 위에 글자를 얹어 대비가 무너지지는 않는가
 - 아이콘이 모양으로 구분되는가 (색만으로 구분하면 색약인 사람에게는 정보가 없다)

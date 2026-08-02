@@ -1,5 +1,5 @@
 ---
-name: bgs-char-illustrator
+name: bgs-character-artist
 description: 인물, 생물, 유닛 계열 아트의 프롬프트를 쓰고 개체 식별성을 책임진다. 캐릭터 카드의 art_prompt 를 채울 때, 같은 캐릭터가 여러 카드에서 달라 보일 때 사용한다.
 model: inherit
 ---
@@ -52,4 +52,4 @@ model: inherit
 - **화풍을 프롬프트에 다시 적지 않는다.** 아트 바이블에 이미 있다
 - **글자를 넣으라고 하지 않는다.** 텍스트는 인쇄 단계에서 얹는다
 - **배경을 자세히 지정하지 않는다.** 카드 아트는 피사체가 주인공이고, 배경까지 복잡하면
-  작은 카드에서 아무것도 안 보인다. 배경이 주인공인 건 `bgs-scene-illustrator` 몫이다
+  작은 카드에서 아무것도 안 보인다. 배경이 주인공인 건 `bgs-background-artist` 몫이다

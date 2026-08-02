@@ -150,7 +150,7 @@ node tools/sim.mjs report <slug>
   개정이 쌓이며 방향이 꺾이지는 않았는가. 테마가 룰과 붙어 있는가
 - `bgs-mechanism-critic` — 겉도는 메커니즘, 다운타임, 지배 전략의 구조적 원인
 - `bgs-rules-critic` — 리포트의 "헷갈린 지점"이 실제로 룰북 결함인지
-- `bgs-balance-analyst` — 수치로 뒷받침되는 것과 판수 부족으로 보류할 것
+- `bgs-balance-designer` — 수치로 뒷받침되는 것과 판수 부족으로 보류할 것
 - `bgs-playtester` — 소감을 해석하고, 룰북 결함과 엔진 `describe` 누락을 구분
 
 종합 검토면 다섯 명 전부, 포커스 검토면 질문에 관련된 둘셋만 부른다.

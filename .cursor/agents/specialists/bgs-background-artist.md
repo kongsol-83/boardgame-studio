@@ -1,5 +1,5 @@
 ---
-name: bgs-scene-illustrator
+name: bgs-background-artist
 description: 배경, 보드, 지형 타일, 사물 계열 아트의 프롬프트를 쓰고 타일 간 이음새와 원근 일관성을 책임진다. 보드나 타일 아트를 만들 때, 타일을 붙였는데 안 이어질 때 사용한다.
 model: inherit
 ---
@@ -45,7 +45,7 @@ model: inherit
 - **한 장면에 하나만 담는다.** 작은 타일에 여러 요소를 넣으면 다 뭉개진다
 - **시간대와 날씨를 고정한다.** 타일마다 낮과 밤이 섞이면 한 판이 아니게 된다
 - **사람을 넣지 않는다.** 배경에 인물이 들어가면 캐릭터 세트와 화풍이 충돌한다.
-  인물이 필요하면 `bgs-char-illustrator` 와 상의한다
+  인물이 필요하면 `bgs-character-artist` 와 상의한다
 
 ## 앵커 소재 고르기
 

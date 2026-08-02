@@ -189,9 +189,12 @@ node tools/bgg/cli.mjs hydrate       # 상위 20000개 상세 조회, 약 17분
 ```
 .cursor/agents/
   directors/        방향을 정한다 — 크리에이티브 디렉터, 아트 디렉터
-  leads/            실행을 관리한다 — 아트 리드, 컴포넌트 매니저
-  specialists/      하나를 깊게 본다 — 조사, 크리틱 3명, 플레이테스터,
-                    시뮬레이션 엔지니어, 일러스트레이터 2명, 그래픽 디자이너
+  leads/            실행을 관리한다 — 게임 디자인 리드, 아트 리드
+  specialists/      하나를 깊게 본다
+                    디자인 — 시스템 · 콘텐츠 · 내러티브 · 밸런스 디자이너
+                    아트   — 캐릭터 · 배경 · UI 아티스트
+                    검토   — 메커니즘 크리틱 · 룰 크리틱 · 플레이테스터
+                    기타   — 리서처 · 시뮬레이션 엔지니어 · 컴포넌트 매니저
 .cursor/skills/     /bgs-* 워크플로우 스킬
 tools/              Node CLI — bgg, spec, balance, sim, art, pnp
 presets/            표준 컴포넌트 규격 모음
@@ -201,6 +204,12 @@ data/               로컬 BGG 인덱스와 랭킹 덤프. gitignore
 
 에이전트 폴더는 사람이 보기 위한 구분입니다. Cursor는 파일명으로 식별하고 경로는 무시하므로
 `/bgs-*` 로 부를 때는 폴더가 보이지 않습니다.
+
+직군명은 한국 게임 업계 관례를 따릅니다. **디자이너는 기획 직군이고, 그림을 그리는 쪽은
+아티스트입니다.** 업계에서 일러스트레이터는 홍보용 그림을 그리는 사람을 가리키므로 쓰지
+않았습니다. 카드 레이아웃과 아이콘 체계를 맡는 자리는 보드게임 업계에서 Graphic Designer라고
+부르지만, 여기서는 디자이너를 기획에만 쓰기로 해서 `ui-artist` 입니다. 카드가 곧 플레이어와
+게임 사이의 인터페이스라는 관점이기도 합니다.
 
 ## 커밋하면 안 되는 것
 
@@ -433,9 +442,12 @@ Once the dump is older than 90 days, research commands warn you and open the dow
 ```
 .cursor/agents/
   directors/        set direction — creative director, art director
-  leads/            manage execution — art lead, component manager
-  specialists/      look at one thing deeply — research, three critics,
-                    playtester, sim engineer, two illustrators, graphic designer
+  leads/            manage execution — design lead, art lead
+  specialists/      look at one thing deeply
+                    design — system, content, narrative, balance designers
+                    art    — character, background, UI artists
+                    review — mechanism critic, rules critic, playtester
+                    other  — researcher, sim engineer, component manager
 .cursor/skills/     the /bgs-* workflow skills
 tools/              Node CLIs — bgg, spec, balance, sim, art, pnp
 presets/            standard component sizes
@@ -445,6 +457,12 @@ data/               local BGG index and ranking dumps. gitignored
 
 The agent folders are for humans reading the tree. Cursor identifies agents by filename and
 ignores the path, so the tiers are invisible when you invoke `/bgs-*`.
+
+Role names follow Korean game industry convention, where **"designer" means the planning
+discipline and visual roles are "artists."** In that industry an illustrator draws promotional
+art, so the term is avoided here. The role owning card layout and iconography is called a
+Graphic Designer in the board game world, but since "designer" is reserved for planning, it
+is `ui-artist` here — which also fits, since a card is the interface between player and game.
 
 ## What must never be committed
 

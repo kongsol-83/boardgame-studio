@@ -66,6 +66,10 @@ BGG XML API 이용약관은 제3자 서비스가 다른 애플리케이션에 �
 에이전트는 `directors/`, `leads/`, `specialists/` 세 폴더로 나뉘어 있습니다. 새로 만들 때는
 그 에이전트가 **방향을 정하는지, 실행을 관리하는지, 하나를 깊게 보는지**로 고르면 됩니다.
 
+이름은 한국 게임 업계 직군명을 따릅니다. **`-designer` 는 기획 직군, `-artist` 는 아트
+직군**입니다. 그림 그리는 역할에 `-designer` 를 붙이지 마세요. 업계에서 일러스트레이터는
+홍보용 그림을 그리는 사람이라 이 저장소에서는 쓰지 않습니다.
+
 #### 에이전트가 전부 안 보인다면
 
 Cursor는 에이전트를 파일명으로 식별하고 경로는 무시합니다. 하위 폴더를 훑는 동작은 지금
@@ -238,6 +242,10 @@ A few rules:
 Agents are split across `directors/`, `leads/`, and `specialists/`. When adding one, pick
 the folder by asking whether it **sets direction, manages execution, or looks at one thing
 deeply**.
+
+Names follow Korean game industry job titles: **`-designer` is a planning role and `-artist`
+is an art role.** Do not name a drawing role `-designer`. "Illustrator" is avoided because in
+that industry it refers to someone drawing promotional art.
 
 #### If all the agents disappear
 

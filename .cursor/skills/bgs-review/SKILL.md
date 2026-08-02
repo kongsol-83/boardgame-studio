@@ -74,7 +74,7 @@ description: 룰셋을 크리틱 3명에게 병렬로 검토받아 리포트로 
 
 - `bgs-mechanism-critic` — 핵심 동사가 실제로 일어나는가, 겉도는 메커니즘, 다운타임
 - `bgs-rules-critic` — 룰 구멍, 애매한 문장, 용어 불일치
-- `bgs-balance-analyst` — 수치와 플레이 기록
+- `bgs-balance-designer` — 수치와 플레이 기록
 
 각자에게 **어느 프로젝트인지와 플레이 기록 위치**를 알려준다. `bgs-rules-critic` 에게는
 설계 의도를 넘기지 않는다. 맥락을 모르는 상태로 읽는 게 그 역할의 전부다.

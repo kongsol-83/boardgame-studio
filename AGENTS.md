@@ -140,11 +140,17 @@ tools/validate.mjs  스킬·에이전트·룰 형식 검증 (CI)
 
 ```
 directors/    방향을 정한다      creative-director, art-director
-leads/        실행을 관리한다     art-lead, component-manager
-specialists/  하나를 깊게 본다    researcher, mechanism-critic, rules-critic,
-                                 balance-analyst, playtester, sim-engineer,
-                                 char-illustrator, scene-illustrator, graphic-designer
+leads/        실행을 관리한다     design-lead, art-lead
+specialists/  하나를 깊게 본다
+  디자인      system-designer, content-designer, narrative-designer, balance-designer
+  아트        character-artist, background-artist, ui-artist
+  검토        mechanism-critic, rules-critic, playtester
+  기타        researcher, sim-engineer, component-manager
 ```
+
+직군명은 한국 게임 업계 관례를 따릅니다. **디자이너는 기획 직군이고 아트는 아티스트입니다.**
+카드 레이아웃과 아이콘을 맡는 `ui-artist` 를 보드게임 업계에서는 Graphic Designer라고
+부르지만, 이 저장소에서는 디자이너를 기획에만 씁니다.
 
 **Cursor는 에이전트를 파일명으로만 식별하고 경로는 무시합니다.** 그래서 폴더는 사람이 보는
 용도일 뿐이고, 다른 폴더라도 파일명이 겹치면 한쪽이 경고 없이 드롭됩니다. `npm run validate`
