@@ -34,7 +34,7 @@ const snap = (value, multiple) => Math.max(multiple, Math.round(value / multiple
 /**
  * mm 크기를 이미지 모델이 받는 픽셀 크기로 바꾼다.
  *
- * 작은 컴포넌트는 최소 픽셀을 넘기려고 키우고(인쇄 시점에 줄인다), 큰 컴포넌트는
+ * 작은 컴포넌트는 최소 픽셀을 넘기려고 키우고(인쇄할 때 줄인다), 큰 컴포넌트는
  * 최대 픽셀과 최대 변에 맞춰 줄인다. **줄인 경우 유효 DPI를 같이 보고한다.**
  * 보드가 203dpi가 한계라는 걸 모르고 잔글씨를 넣으면 인쇄하고 나서 알게 된다.
  *
@@ -128,7 +128,7 @@ export function printableArea({ sheet = 'A4', margin_mm = 10 } = {}) {
 }
 
 /**
- * 컴포넌트 한 종류를 시트에 몇 개씩 몇 장에 나눠 담는지.
+ * 컴포넌트 한 종류를 시트당 몇 개씩, 몇 시트에 나눠 담는지.
  * 세로/가로 두 방향을 다 계산해서 많이 들어가는 쪽을 고른다.
  */
 export function sheetLayout(widthMm, heightMm, { count = 1, print = {} } = {}) {

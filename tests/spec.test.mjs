@@ -76,7 +76,7 @@ test('A4 여백 9mm 인쇄 영역', () => {
   assert.equal(area.height, 279);
 });
 
-test('여백 9mm 에서 포커 카드가 장당 9장이다', () => {
+test('여백 9mm 에서 포커 카드가 시트당 9장이다', () => {
   const layout = sheetLayout(63.5, 88, { count: 54, print: { sheet: 'A4', margin_mm: 9 } });
   assert.equal(layout.perSheet, 9);
   assert.equal(layout.cols, 3);
@@ -86,7 +86,7 @@ test('여백 9mm 에서 포커 카드가 장당 9장이다', () => {
 
 test('여백 0.5mm 차이로 포커 3열이 무너진다', () => {
   // 포커 실제 규격은 63.5mm 이고 3열이면 190.5mm. 여백 10mm면 인쇄 영역이
-  // 190mm 라 0.5mm 가 모자라서 장당 9장이 8장이 된다. 기본값을 9mm 로 둔 이유다.
+  // 190mm 라 0.5mm 가 모자라서 시트당 9장이 8장이 된다. 기본값을 9mm 로 둔 이유다.
   assert.equal(sheetLayout(63.5, 88, { count: 54, print: { margin_mm: 9.75 } }).perSheet, 9);
   assert.equal(sheetLayout(63.5, 88, { count: 54, print: { margin_mm: 10 } }).perSheet, 8);
 });

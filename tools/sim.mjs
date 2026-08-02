@@ -355,7 +355,7 @@ async function commandRun(slug, values) {
 // ---------------------------------------------------------------------------
 
 /**
- * 90판에서 나온 소감과 헷갈린 지점을 묶어 정리한다.
+ * 90판에서 나온 소감과 헷갈린 대목을 묶어 정리한다.
  *
  * 표현만 다르고 같은 말이 반복되는데, 문자열 비교로는 못 묶는다. 이건 기계적인
  * 정리 작업이라 모델에 맡기고, 해석과 제안은 검토 단계의 에이전트에게 남긴다.
@@ -489,7 +489,7 @@ async function commandReport(slug, values) {
     // 좌석 편중과 같은 이유로 표본이 적으면 판정하지 않는다
     if (totalFinished >= 20) {
       for (const entry of strategies.filter((item) => item.played >= 10 && item.winRate >= 0.6)) {
-        flags.push(`"${entry.tag}" 가 ${entry.played}회 중 승률 ${(entry.winRate * 100).toFixed(0)}% 입니다. 지배 전략인지 확인이 필요합니다.`);
+        flags.push(`"${entry.tag}" 가 ${entry.played}회 중 승률 ${(entry.winRate * 100).toFixed(0)}% 입니다. 지배 전략인지 확인하세요.`);
       }
     }
   }
@@ -515,9 +515,9 @@ async function commandReport(slug, values) {
   }
 
   if (clustered?.themes?.length > 0) {
-    lines.push('## 룰북에서 헷갈린 지점');
+    lines.push('## 룰북에서 헷갈린 대목');
     lines.push('');
-    lines.push('플레이 도중 표시된 것을 묶은 것입니다. **룰북의 애매한 자리를 그대로 가리킵니다.**');
+    lines.push('플레이 도중 나온 지적을 묶었습니다. **룰북의 애매한 자리를 그대로 가리킵니다.**');
     lines.push('`rulebook` 은 룰북에 정보가 없다는 지적이고, `unclear` 는 그 외 애매함입니다.');
     lines.push('');
     for (const theme of clustered.themes.slice(0, 15)) {
@@ -525,7 +525,7 @@ async function commandReport(slug, values) {
     }
     lines.push('');
   } else if (data.confusions?.length > 0) {
-    lines.push('## 룰북에서 헷갈린 지점');
+    lines.push('## 룰북에서 헷갈린 대목');
     lines.push('');
     const counted = new Map();
     for (const entry of data.confusions) counted.set(entry.note, (counted.get(entry.note) ?? 0) + 1);
@@ -561,12 +561,12 @@ async function commandReport(slug, values) {
   lines.push('');
   lines.push('## 다음: 검토');
   lines.push('');
-  lines.push('여기까지는 사실입니다. 이제 각 각도에서 해석과 제안이 필요합니다.');
+  lines.push('여기까지는 사실입니다. 해석과 제안은 다음 단계에서 붙입니다.');
   lines.push('`/bgs-sim` 의 검토 단계나 `/bgs-review` 로 넘기세요.');
   lines.push('');
   lines.push('- **컨셉과 테마** — 이 결과가 concept.md 의 핵심 동사를 만들어내고 있는가');
   lines.push('- **메커니즘** — 겉도는 것, 다운타임, 지배 전략의 구조적 원인');
-  lines.push('- **룰** — 위의 "헷갈린 지점"이 룰북 결함인지 엔진 describe 누락인지');
+  lines.push('- **룰** — 위의 "헷갈린 대목"이 룰북 결함인지 엔진 describe 누락인지');
   lines.push('- **밸런스** — 수치로 뒷받침되는 것과 판수 부족으로 보류할 것');
   lines.push('');
 

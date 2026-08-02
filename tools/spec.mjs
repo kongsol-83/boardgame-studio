@@ -184,7 +184,7 @@ const USAGE = `
   validate <slug>   필수 필드, 크기, 수량 검증. spec.json 의 count 와
                     CSV 실제 수량이 다르면 잡는다
   resolve <slug>    mm 를 이미지 모델이 받는 픽셀로 산출하고 유효 DPI를 보고
-  sheet <slug>      A4 몇 장이 필요한지. 시트보다 큰 건 조각으로 나눈다
+  sheet <slug>      A4 몇 시트가 드는지. 시트보다 큰 건 조각으로 나눈다
   presets [--type card]  표준 규격 목록
 
 픽셀은 손으로 적지 않는다. mm 만 선언하면 나머지는 산출된다.

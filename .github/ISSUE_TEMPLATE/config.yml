@@ -2,7 +2,7 @@ blank_issues_enabled: true
 contact_links:
   - name: 사용 사례와 잡담
     url: https://github.com/kongsol-83/boardgame-studio/discussions
-    about: 이걸로 만든 게임 이야기, 워크플로우가 막힌 지점, 아이디어는 Discussions로 부탁드립니다.
+    about: 이걸로 만든 게임 이야기, 워크플로우가 막힌 대목, 아이디어는 Discussions로 부탁드립니다.
   - name: BoardGameGeek API 토큰 발급
     url: https://boardgamegeek.com/applications
     about: 레퍼런스 조사에는 각자의 BGG 액세스 토큰이 필요합니다. 여기서 발급받으세요.

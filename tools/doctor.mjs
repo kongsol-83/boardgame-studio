@@ -193,7 +193,7 @@ const failed = checks.filter((check) => check.level === 'fail').length;
 const warned = checks.filter((check) => check.level === 'warn').length;
 
 console.log('');
-console.log(failed > 0 ? `실패 ${failed}건, 주의 ${warned}건` : warned > 0 ? `주의 ${warned}건. 해당 기능만 막히고 나머지는 동작합니다.` : '전부 정상입니다.');
+console.log(failed > 0 ? `실패 ${failed}건, 주의 ${warned}건` : warned > 0 ? `주의 ${warned}건. 그 기능만 막히고 나머지는 동작합니다.` : '전부 정상입니다.');
 console.log('');
 
 process.exit(failed > 0 ? 1 : 0);

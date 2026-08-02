@@ -41,7 +41,7 @@ description: 룰셋에서 컴포넌트를 뽑아 spec.json 규격과 종류별 C
 `node tools/spec.mjs presets` 로 표준 규격을 보고 고른다. 비표준을 쓰겠다면 이유를
 확인한다.
 
-**여기서 인쇄 장수를 같이 확인한다.** 미니 유로는 A4에 16장, 포커는 9장, 타로는 4장이다.
+**여기서 인쇄 시트 수를 같이 확인한다.** 미니 유로는 A4에 16장, 포커는 9장, 타로는 4장이다.
 같은 60장 덱이라도 인쇄와 재단 시간이 4배 차이 나는데, 공모전 마감이 있으면 이게 실제
 제약이 된다.
 
@@ -87,14 +87,14 @@ CSV를 채운다. **한 번에 다 만들려 하지 않는다.** 종류별로 �
 룰셋과 어긋나지 않는지 확인한다.
 
 카드 텍스트는 **짧게** 쓴다. 63.5 x 88mm에 들어가는 글자 수는 생각보다 적다.
-`node tools/pnp.mjs <slug> --check` 로 넘치는지 확인할 수 있다.
+`node tools/pnp.mjs <slug> --check` 로 넘치는지 확인한다.
 
 ### 6. 검증
 
 ```bash
 node tools/spec.mjs validate <slug>   # 필수 필드와 선언 수량 대조
 node tools/spec.mjs resolve <slug>    # 픽셀과 유효 DPI
-node tools/spec.mjs sheet <slug>      # 총 인쇄 장수
+node tools/spec.mjs sheet <slug>      # 총 인쇄 시트 수
 ```
 
 `validate` 는 `spec.json` 의 `count` 와 CSV 실제 수량을 대조한다. 어긋나면 **어느 쪽이

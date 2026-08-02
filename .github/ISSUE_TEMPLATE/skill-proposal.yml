@@ -33,7 +33,7 @@ body:
     id: problem
     attributes:
       label: 어떤 문제를 겪었나
-      description: 지금 워크플로우로 안 되는 것, 혹은 결과가 아쉬웠던 지점.
+      description: 지금 워크플로우로 안 되는 것, 혹은 결과가 아쉬웠던 대목.
     validations:
       required: true
 

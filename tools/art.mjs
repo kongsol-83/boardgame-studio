@@ -202,7 +202,7 @@ function commandApprove(slug, values) {
     set,
     approved: chosen,
     path: path.relative(ROOT, path.join(dir, APPROVED)),
-    note: '이제 이 앵커가 해당 세트의 모든 에셋에 레퍼런스로 붙습니다.',
+    note: '이제 이 앵커가 그 세트의 모든 에셋에 레퍼런스로 붙습니다.',
   });
 }
 
