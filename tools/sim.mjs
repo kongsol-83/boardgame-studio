@@ -591,25 +591,43 @@ async function commandReport(slug, values) {
 // ---------------------------------------------------------------------------
 
 function commandServe(slug, values) {
-  const root = projectDir(slug);
+  const root = path.resolve(projectDir(slug));
   const port = Number(values.port ?? 4173);
+  /*
+   * 루프백에만 바인딩한다. 이 서버는 프로젝트 폴더를 그대로 내주고, 그 안에는 아직
+   * 공개하지 않은 룰셋과 컴포넌트가 있다. 기본으로 모든 인터페이스에 열면 같은 네트워크의
+   * 아무 기기나 미공개 출품작을 읽는다. 저장소가 gitignore와 CI로 막아둔 것을
+   * 로컬 서버가 뚫어주면 앞의 방어가 의미를 잃는다.
+   *
+   * 태블릿을 테이블에 놓고 플레이하려면 --host 0.0.0.0 으로 직접 연다.
+   */
+  const host = values.host ?? '127.0.0.1';
   const types = { '.html': 'text/html; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json; charset=utf-8', '.css': 'text/css; charset=utf-8' };
 
   createServer((request, response) => {
+    /*
+     * URL 파서가 `/../` 는 정규화하지만 `%2e%2e%2f` 는 그대로 남긴다. 그걸 풀고 나서
+     * 경로를 합치므로 아래 포함 검사가 실제 방어선이다.
+     *
+     * 구분자를 붙여서 비교한다. 붙이지 않으면 프로젝트 이름이 `example` 일 때
+     * `example-tidepool` 이 접두어로 걸려서 옆 프로젝트가 열린다.
+     */
     const requested = decodeURIComponent(new URL(request.url, 'http://localhost').pathname);
     const relative = requested === '/' ? '/sim/play.html' : requested;
-    const file = path.join(root, relative);
+    const file = path.resolve(path.join(root, relative));
 
-    // 프로젝트 밖으로 못 나가게 한다
-    if (!file.startsWith(root) || !existsSync(file)) {
+    if (!(file + path.sep).startsWith(root + path.sep) || !existsSync(file)) {
       response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
       response.end('없습니다');
       return;
     }
     response.writeHead(200, { 'Content-Type': types[path.extname(file)] ?? 'application/octet-stream' });
     response.end(readFileSync(file));
-  }).listen(port, () => {
-    log(`http://localhost:${port} 에서 열립니다. Ctrl+C 로 종료.`);
+  }).listen(port, host, () => {
+    log(`http://${host === '0.0.0.0' ? 'localhost' : host}:${port} 에서 열립니다. Ctrl+C 로 종료.`);
+    if (host !== '127.0.0.1' && host !== 'localhost') {
+      log(`주의: ${host} 로 열었습니다. 같은 네트워크의 다른 기기가 projects/${slug}/ 를 읽습니다.`);
+    }
   });
 }
 
@@ -633,8 +651,9 @@ const USAGE = `
       최근 로그를 playtest/sim-YYYY-MM-DD.md 로 정리한다. 표현만 다르고 같은 말인
       피드백을 models.review 모델로 묶는다. --raw 는 묶지 않고 원문을 그대로 낸다.
 
-  serve <slug> [--port 4173]
+  serve <slug> [--port 4173] [--host 0.0.0.0]
       sim/play.html 정적 서버. 사람이 직접 플레이하거나 리플레이를 본다.
+      기본은 루프백만 듣는다. --host 로 열면 같은 네트워크가 프로젝트 폴더를 읽는다.
 
 목적은 밸런싱이 아니라 테이블에 가기 전 사고 방지다.
 `;
@@ -654,6 +673,7 @@ const { values, positionals } = parseArgs({
     focus: { type: 'string' },
     raw: { type: 'boolean' },
     port: { type: 'string' },
+    host: { type: 'string' },
     help: { type: 'boolean', short: 'h' },
   },
 });
